@@ -106,21 +106,7 @@ To compile the TypeScript project and generate minified production static assets
 npm run build
 ```
 
-The output will be generated in the `dist/` directory ready for deployment.
-
----
-
-## 🌐 Deploying to Vercel
-
-This repository includes a [`vercel.json`](./vercel.json) file pre-configured for Single Page Application (SPA) client-side routing rewrites.
-
-### 1-Click Vercel Deployment
-
-1. Go to **[https://vercel.com/new](https://vercel.com/new)**.
-2. Import the GitHub repository: **`Sravya-nova/biocycle`**.
-3. Select Framework Preset: **`Vite`**.
-4. Leave default settings (*Build Command*: `npm run build`, *Output Directory*: `dist`).
-5. Click **Deploy**. Vercel will build and assign your live production URL.
+The output will be generated in the `dist/` directory ready for static web hosting.
 
 ---
 
