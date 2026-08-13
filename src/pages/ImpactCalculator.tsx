@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getBatches } from '../services/storageService';
 import type { WasteBatch } from '../types/biocycle';
 import { StatCard } from '../components/StatCard';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   Calculator, 
   CloudRain, 
@@ -10,7 +11,6 @@ import {
   Sliders, 
   Download, 
   ShieldAlert, 
-  Info,
   Layers,
   Sprout
 } from 'lucide-react';
@@ -25,22 +25,18 @@ import {
 } from 'recharts';
 
 export const ImpactCalculator: React.FC = () => {
+  const { t } = useLanguage();
   const [batches, setBatches] = useState<WasteBatch[]>([]);
 
   // Configurable Demonstration Assumptions
-  const [outputFactor, setOutputFactor] = useState<number>(0.48); // 0.48 kg output per kg waste
-  const [replacementFactor, setReplacementFactor] = useState<number>(0.35); // 0.35 kg fertilizer replaced per kg output
-  const [carbonFactor, setCarbonFactor] = useState<number>(1.85); // 1.85 kg CO2e benefit per kg waste diverted
+  const [outputFactor, setOutputFactor] = useState<number>(0.48);
+  const [replacementFactor, setReplacementFactor] = useState<number>(0.35);
+  const [carbonFactor, setCarbonFactor] = useState<number>(1.85);
 
   useEffect(() => {
     setBatches(getBatches());
   }, []);
 
-  // Per-Batch Calculations using user-specified formulas:
-  // - waste diverted = successfully processed waste quantity (kg)
-  // - estimated output = waste quantity × output factor
-  // - fertilizer replacement = estimated output × replacement factor
-  // - carbon benefit = waste diverted × demonstration carbon factor
   const batchImpacts = batches.map(b => {
     const wasteDivertedKg = b.weightKg;
     const estimatedOutputKg = Number((b.weightKg * outputFactor).toFixed(1));
@@ -61,61 +57,40 @@ export const ImpactCalculator: React.FC = () => {
     };
   });
 
-  // Aggregated Totals
   const totalWasteDivertedKg = batchImpacts.reduce((acc, b) => acc + b.wasteDivertedKg, 0);
   const totalEstimatedOutputKg = batchImpacts.reduce((acc, b) => acc + b.estimatedOutputKg, 0);
   const totalFertilizerReplacementKg = batchImpacts.reduce((acc, b) => acc + b.fertilizerReplacementKg, 0);
   const totalCarbonBenefitKgCO2e = batchImpacts.reduce((acc, b) => acc + b.carbonBenefitKgCO2e, 0);
 
-  // Chart Data for Per-Batch Comparison
   const chartData = batchImpacts.map(b => ({
     name: b.batchName.length > 15 ? b.batchName.substring(0, 15) + '...' : b.batchName,
-    'Waste Diverted (kg)': b.wasteDivertedKg,
-    'Est. Output (kg)': b.estimatedOutputKg,
-    'Est. Fertilizer Replaced (kg)': b.fertilizerReplacementKg,
-    'Est. Carbon Benefit (kg CO₂e)': b.carbonBenefitKgCO2e
+    'Waste Saved (kg)': b.wasteDivertedKg,
+    'Est. Fertilizer (kg)': b.estimatedOutputKg,
+    'Chemical Saved (kg)': b.fertilizerReplacementKg,
+    'Clean Air (kg CO₂e)': b.carbonBenefitKgCO2e
   }));
 
   const handleDownloadReport = () => {
     const reportText = `
 ==================================================
-BIOCYCLE EDUCATIONAL IMPACT ESTIMATES REPORT
+BIOCYCLE PLAIN-LANGUAGE ESTIMATES REPORT
 ==================================================
 Generated Date: ${new Date().toLocaleDateString()}
 
-DEMONSTRATION ASSUMPTIONS USED:
-- Output Factor: ${outputFactor} (kg bio-output per kg waste)
-- Fertilizer Replacement Factor: ${replacementFactor} (kg NPK replaced per kg bio-output)
-- Demonstration Carbon Factor: ${carbonFactor} (kg CO2e benefit per kg waste diverted)
+ESTIMATED SAVINGS & OUTPUT:
+- Total Waste Kept Out of Trash: ${totalWasteDivertedKg.toLocaleString()} kg
+- Total Natural Fertilizer/Gas Yield: ${totalEstimatedOutputKg.toLocaleString()} kg
+- Total Chemical Fertilizer Replaced: ${totalFertilizerReplacementKg.toLocaleString()} kg
+- Total Clean Air Benefit: ${totalCarbonBenefitKgCO2e.toLocaleString()} kg CO2e
 
-CUMULATIVE ESTIMATED RESULTS:
-- Total Estimated Waste Diverted: ${totalWasteDivertedKg.toLocaleString()} kg
-- Total Estimated Output (Compost/Biofertilizer): ${totalEstimatedOutputKg.toLocaleString()} kg
-- Total Estimated Synthetic Fertilizer Replacement: ${totalFertilizerReplacementKg.toLocaleString()} kg NPK
-- Total Estimated Carbon Benefit: ${totalCarbonBenefitKgCO2e.toLocaleString()} kg CO2e
-
-PER-BATCH ESTIMATED BREAKDOWN:
-${batchImpacts.map(b => `
-• Batch: ${b.batchName} (${b.category})
-  - Waste Diverted: ${b.wasteDivertedKg} kg
-  - Est. Output: ${b.estimatedOutputKg} kg
-  - Est. Fertilizer Replacement: ${b.fertilizerReplacementKg} kg NPK
-  - Est. Carbon Benefit: ${b.carbonBenefitKgCO2e} kg CO2e
-`).join('')}
-
-DISCLAIMER:
-"These values are educational estimates and must be replaced with locally validated laboratory or life-cycle data."
-
-==================================================
-BioCycle - Biological Treatment & Resource Recovery
-==================================================
+${t.disclaimerBody}
     `.trim();
 
     const blob = new Blob([reportText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `BioCycle_Educational_Impact_Estimates_${Date.now()}.txt`;
+    a.download = `BioCycle_Estimates_${Date.now()}.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -131,8 +106,8 @@ BioCycle - Biological Treatment & Resource Recovery
               <Calculator className="h-7 w-7" />
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold text-white">Impact & Sustainability Calculator</h1>
-              <p className="text-xs text-gray-300">Educational estimation models for waste diversion, bio-yields, fertilizer replacement, and carbon benefit</p>
+              <h1 className="text-2xl font-extrabold text-white">{t.impactTitle}</h1>
+              <p className="text-xs text-gray-300">{t.impactSubtitle}</p>
             </div>
           </div>
 
@@ -141,18 +116,18 @@ BioCycle - Biological Treatment & Resource Recovery
             className="flex items-center space-x-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold rounded-xl shadow-lg transition-all text-sm"
           >
             <Download className="h-4 w-4" />
-            <span>Export Educational Report</span>
+            <span>Download Summary Report</span>
           </button>
         </div>
       </div>
 
-      {/* MANDATORY DISCLAIMER BANNER */}
+      {/* DISCLAIMER BANNER */}
       <div className="glass-panel p-5 border border-amber-600/60 bg-amber-950/40 flex items-start space-x-3 text-amber-200">
         <ShieldAlert className="h-6 w-6 text-amber-400 shrink-0 mt-0.5" />
         <div className="space-y-1">
-          <h4 className="font-extrabold text-sm uppercase tracking-wider text-amber-300">Methodological Disclaimer</h4>
+          <h4 className="font-extrabold text-sm uppercase tracking-wider text-amber-300">{t.disclaimerTitle}</h4>
           <p className="text-xs leading-relaxed font-semibold italic text-amber-100">
-            “These values are educational estimates and must be replaced with locally validated laboratory or life-cycle data.”
+            "{t.disclaimerBody}"
           </p>
         </div>
       </div>
@@ -160,40 +135,40 @@ BioCycle - Biological Treatment & Resource Recovery
       {/* Cumulative Aggregate Stat Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Est. Waste Diverted"
+          title={t.wasteDivertedLabel}
           value={totalWasteDivertedKg.toLocaleString()}
           unit="kg"
-          subtitle="Processed waste quantity"
+          subtitle={t.wasteDivertedDesc}
           icon={Scale}
           accentColor="emerald"
         />
         <StatCard
-          title="Est. Output Yield"
+          title={t.outputYieldLabel}
           value={totalEstimatedOutputKg.toLocaleString()}
           unit="kg / L"
-          subtitle="Compost & biofertilizer"
+          subtitle={t.outputYieldDesc}
           icon={Sprout}
           accentColor="mint"
         />
         <StatCard
-          title="Est. Fertilizer Replacement"
+          title="Chemical Fertilizer Replaced"
           value={totalFertilizerReplacementKg.toLocaleString()}
-          unit="kg NPK"
-          subtitle="Synthetic fertilizer offset"
+          unit="kg"
+          subtitle="Savings on chemical fertilizer"
           icon={Leaf}
           accentColor="amber"
         />
         <StatCard
-          title="Est. Carbon Benefit"
+          title={t.carbonBenefitLabel}
           value={totalCarbonBenefitKgCO2e.toLocaleString()}
           unit="kg CO₂e"
-          subtitle="GHG mitigation benefit"
+          subtitle={t.carbonBenefitDesc}
           icon={CloudRain}
           accentColor="blue"
         />
       </div>
 
-      {/* 2-COLUMN LAYOUT: ASSUMPTIONS CONTROLS (LEFT) NEXT TO CALCULATIONS & TABLE (RIGHT) */}
+      {/* 2-COLUMN LAYOUT */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* LEFT COLUMN: Demonstration Assumptions Controls */}
@@ -201,15 +176,15 @@ BioCycle - Biological Treatment & Resource Recovery
           <div className="border-b border-emerald-900/50 pb-3 flex items-center space-x-2">
             <Sliders className="h-5 w-5 text-emerald-400" />
             <div>
-              <h3 className="text-lg font-bold text-white">Demonstration Assumptions</h3>
-              <p className="text-xs text-gray-400">Configurable factors used for educational calculations</p>
+              <h3 className="text-lg font-bold text-white">{t.assumptionsTitle}</h3>
+              <p className="text-xs text-gray-400">{t.assumptionsSubtitle}</p>
             </div>
           </div>
 
           {/* 1. Output Factor */}
           <div className="space-y-2 bg-[#06120d] p-4 rounded-xl border border-emerald-900/50">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-gray-300">Output Factor</span>
+              <span className="font-bold text-gray-300">Fertilizer Conversion Rate</span>
               <span className="font-extrabold text-emerald-400">{outputFactor} kg / kg</span>
             </div>
             <input
@@ -222,15 +197,15 @@ BioCycle - Biological Treatment & Resource Recovery
               className="w-full accent-emerald-500 cursor-pointer"
             />
             <div className="p-2 bg-[#030906] rounded text-[10px] text-gray-400 font-mono">
-              Formula: estimated output = waste quantity × {outputFactor}
+              Fertilizer Output = waste quantity × {outputFactor}
             </div>
           </div>
 
           {/* 2. Replacement Factor */}
           <div className="space-y-2 bg-[#06120d] p-4 rounded-xl border border-emerald-900/50">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-gray-300">Fertilizer Replacement Factor</span>
-              <span className="font-extrabold text-amber-400">{replacementFactor} NPK / kg</span>
+              <span className="font-bold text-gray-300">Chemical Fertilizer Saved Rate</span>
+              <span className="font-extrabold text-amber-400">{replacementFactor} kg / kg</span>
             </div>
             <input
               type="range"
@@ -242,15 +217,15 @@ BioCycle - Biological Treatment & Resource Recovery
               className="w-full accent-amber-500 cursor-pointer"
             />
             <div className="p-2 bg-[#030906] rounded text-[10px] text-gray-400 font-mono">
-              Formula: fertilizer replacement = estimated output × {replacementFactor}
+              Chemical Saved = natural fertilizer × {replacementFactor}
             </div>
           </div>
 
           {/* 3. Demonstration Carbon Factor */}
           <div className="space-y-2 bg-[#06120d] p-4 rounded-xl border border-emerald-900/50">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-gray-300">Demonstration Carbon Factor</span>
-              <span className="font-extrabold text-blue-400">{carbonFactor} kg CO₂e / kg</span>
+              <span className="font-bold text-gray-300">Clean Air Benefit Rate</span>
+              <span className="font-extrabold text-blue-400">{carbonFactor} CO₂e / kg</span>
             </div>
             <input
               type="range"
@@ -262,18 +237,8 @@ BioCycle - Biological Treatment & Resource Recovery
               className="w-full accent-blue-500 cursor-pointer"
             />
             <div className="p-2 bg-[#030906] rounded text-[10px] text-gray-400 font-mono">
-              Formula: carbon benefit = waste diverted × {carbonFactor}
+              Clean Air Benefit = waste saved × {carbonFactor}
             </div>
-          </div>
-
-          <div className="p-3 bg-emerald-950/30 rounded-xl border border-emerald-800/40 text-[11px] text-emerald-300 space-y-1">
-            <div className="flex items-center space-x-1 font-bold">
-              <Info className="h-3.5 w-3.5" />
-              <span>Assumptions Reference:</span>
-            </div>
-            <p className="text-[10px] text-gray-400">
-              Assumptions reflect standard aerobic composting & vermicomposting mass-balance conversions (45-55% organic solid conversion).
-            </p>
           </div>
 
         </div>
@@ -285,8 +250,8 @@ BioCycle - Biological Treatment & Resource Recovery
           <div className="glass-panel p-6 border border-emerald-800/40 space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-lg font-bold text-white">Estimated Impact Breakdown by Batch</h3>
-                <p className="text-xs text-gray-400">Comparing estimated waste diverted, bio-output, fertilizer replacement, and carbon benefit</p>
+                <h3 className="text-lg font-bold text-white">Estimated Output Breakdown</h3>
+                <p className="text-xs text-gray-400">Comparing waste saved, fertilizer yield, and clean air benefits</p>
               </div>
             </div>
 
@@ -297,10 +262,10 @@ BioCycle - Biological Treatment & Resource Recovery
                   <YAxis stroke="#9ca3af" fontSize={11} />
                   <Tooltip contentStyle={{ backgroundColor: '#09140f', borderColor: '#10b981', color: '#fff', borderRadius: '8px' }} />
                   <Legend wrapperStyle={{ fontSize: '11px', color: '#9ca3af' }} />
-                  <Bar dataKey="Waste Diverted (kg)" fill="#10b981" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Est. Output (kg)" fill="#34d399" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Est. Fertilizer Replaced (kg)" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Est. Carbon Benefit (kg CO₂e)" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Waste Saved (kg)" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Est. Fertilizer (kg)" fill="#34d399" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Chemical Saved (kg)" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="Clean Air (kg CO₂e)" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -310,26 +275,26 @@ BioCycle - Biological Treatment & Resource Recovery
           <div className="glass-panel p-6 border border-emerald-800/40 space-y-4">
             <div className="flex items-center space-x-2 border-b border-emerald-900/50 pb-3">
               <Layers className="h-5 w-5 text-emerald-400" />
-              <h3 className="text-lg font-bold text-white">Per-Batch Educational Impact Estimates</h3>
+              <h3 className="text-lg font-bold text-white">Per-Pile Estimated Savings</h3>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs text-gray-300 border-collapse">
                 <thead>
                   <tr className="bg-[#06120d] border-b border-emerald-900/50 text-[10px] uppercase font-bold text-gray-400">
-                    <th className="p-3">Batch Name</th>
-                    <th className="p-3">Category</th>
-                    <th className="p-3 text-right">Waste Diverted (kg)</th>
-                    <th className="p-3 text-right">Est. Output (kg/L)</th>
-                    <th className="p-3 text-right">Est. Fertilizer Replaced (kg NPK)</th>
-                    <th className="p-3 text-right">Est. Carbon Benefit (kg CO₂e)</th>
+                    <th className="p-3">Pile Name</th>
+                    <th className="p-3">Type</th>
+                    <th className="p-3 text-right">Waste Saved</th>
+                    <th className="p-3 text-right">Est. Fertilizer</th>
+                    <th className="p-3 text-right">Chemical Saved</th>
+                    <th className="p-3 text-right">Clean Air</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-emerald-900/30">
                   {batchImpacts.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="p-6 text-center text-gray-400">
-                        No waste batches logged yet.
+                        No waste entries recorded yet.
                       </td>
                     </tr>
                   ) : (

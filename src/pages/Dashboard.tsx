@@ -3,6 +3,7 @@ import type { WasteBatch, ProcessReading } from '../types/biocycle';
 import { getBatches, getReadings } from '../services/storageService';
 import { StatCard } from '../components/StatCard';
 import { BatchStatusBadge } from '../components/BatchStatusBadge';
+import { useLanguage } from '../context/LanguageContext';
 import type { NavTab } from '../components/Navbar';
 import { 
   Scale, 
@@ -39,6 +40,7 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, onSelectBatchForMonitor }) => {
+  const { t } = useLanguage();
   const [batches, setBatches] = useState<WasteBatch[]>([]);
   const [readings, setReadings] = useState<ProcessReading[]>([]);
 
@@ -59,13 +61,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, onSelectBatc
   const activeBatchesList = batches.filter(b => b.status !== 'Completed' && b.status !== 'Archived');
   const activeBatchesCount = activeBatchesList.length;
 
-  // Estimated output = sum of (weightKg × 0.48 conversion factor)
   const totalEstimatedOutputKg = Math.round(batches.reduce((acc, b) => acc + (b.weightKg * 0.48), 0));
-
-  // Estimated carbon benefit = sum of (weightKg diverted × 1.85 kg CO2e factor)
   const totalEstimatedCarbonBenefitKg = Math.round(totalWasteDivertedKg * 1.85);
 
-  // Process Status Chart Data (Group by status)
+  // Process Status Chart Data
   const statusCounts: Record<string, number> = {
     'Processing': 0,
     'Optimal': 0,
@@ -96,7 +95,6 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, onSelectBatc
     'Completed': '#64748b'
   };
 
-  // Recent Waste Batches (Sorted by dateAdded descending)
   const recentBatches = [...batches]
     .sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime())
     .slice(0, 6);
@@ -115,30 +113,30 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, onSelectBatc
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-900/60 text-emerald-300 border border-emerald-700/50 text-xs font-semibold">
               <Leaf className="h-3.5 w-3.5 text-emerald-400" />
-              <span>Dynamic localStorage Analytics</span>
+              <span>{t.appTagline}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              BioCycle Operations Dashboard
+              {t.dashboardTitle}
             </h1>
             <p className="text-sm text-gray-300">
-              Live calculations generated dynamically from saved waste records and telemetry sensor logs.
+              {t.dashboardSubtitle}
             </p>
           </div>
 
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => setActiveTab('add-batch')}
-              className="flex items-center space-x-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold rounded-xl shadow-lg shadow-emerald-950/50 transition-all text-sm"
+              className="flex items-center space-x-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-extrabold rounded-xl shadow-lg shadow-emerald-950/50 transition-all text-sm"
             >
               <PlusCircle className="h-4 w-4" />
-              <span>Add Waste Batch</span>
+              <span>{t.addBatchBtn}</span>
             </button>
             <button
               onClick={() => setActiveTab('recommendation')}
-              className="flex items-center space-x-2 px-4 py-2.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/50 font-semibold rounded-xl transition-all text-sm"
+              className="flex items-center space-x-2 px-4 py-2.5 bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-700/50 font-bold rounded-xl transition-all text-sm"
             >
               <Sparkles className="h-4 w-4 text-emerald-400" />
-              <span>Get Recommendation</span>
+              <span>{t.getRecBtn}</span>
             </button>
           </div>
         </div>
@@ -151,70 +149,62 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, onSelectBatc
             <Inbox className="h-10 w-10" />
           </div>
           <div className="space-y-2 max-w-md mx-auto">
-            <h2 className="text-2xl font-bold text-white">No Waste Batches Logged Yet</h2>
-            <p className="text-xs text-gray-400">
-              Your localStorage database is currently empty. Get started by adding your first organic waste batch to see dynamic metrics, status charts, and recommendations.
-            </p>
+            <h2 className="text-2xl font-bold text-white">{t.noBatchesMessage}</h2>
           </div>
           <button
             onClick={() => setActiveTab('add-batch')}
             className="inline-flex items-center space-x-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-extrabold rounded-xl shadow-lg transition-all text-sm"
           >
             <PlusCircle className="h-5 w-5" />
-            <span>Add Waste Batch</span>
+            <span>{t.addBatchBtn}</span>
           </button>
         </div>
       ) : (
         <>
-          {/* DYNAMIC CALCULATED METRICS CARDS */}
+          {/* DYNAMIC CALCULATED METRICS CARDS WITH PLAIN LANGUAGE */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             
-            {/* 1. Total waste processed */}
             <StatCard
-              title="Total Waste Processed"
+              title={t.totalWasteLabel}
               value={totalWasteProcessedKg.toLocaleString()}
               unit="kg"
-              subtitle="Active & completed"
+              subtitle={t.totalWasteDesc}
               icon={Scale}
               accentColor="emerald"
             />
 
-            {/* 2. Number of active batches */}
             <StatCard
-              title="Active Batches"
+              title={t.activeBatchesLabel}
               value={activeBatchesCount}
-              unit="batches"
-              subtitle="Currently in facility"
+              unit="piles"
+              subtitle={t.activeBatchesDesc}
               icon={Recycle}
               accentColor="mint"
             />
 
-            {/* 3. Estimated output */}
             <StatCard
-              title="Estimated Output"
+              title={t.outputYieldLabel}
               value={totalEstimatedOutputKg.toLocaleString()}
               unit="kg / L"
-              subtitle="Bio-fertilizer & compost"
+              subtitle={t.outputYieldDesc}
               icon={Sprout}
               accentColor="amber"
             />
 
-            {/* 4. Waste diverted */}
             <StatCard
-              title="Waste Diverted"
+              title={t.wasteDivertedLabel}
               value={totalWasteDivertedKg.toLocaleString()}
               unit="kg"
-              subtitle="Diverted from landfill"
+              subtitle={t.wasteDivertedDesc}
               icon={Leaf}
               accentColor="blue"
             />
 
-            {/* 5. Estimated carbon benefit */}
             <StatCard
-              title="Est. Carbon Benefit"
+              title={t.carbonBenefitLabel}
               value={(totalEstimatedCarbonBenefitKg / 1000).toFixed(2)}
               unit="MT CO₂e"
-              subtitle="Calculated GHG benefit"
+              subtitle={t.carbonBenefitDesc}
               icon={CloudRain}
               accentColor="emerald"
             />
@@ -230,9 +220,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, onSelectBatc
                 <div>
                   <h3 className="text-lg font-bold text-white flex items-center space-x-2">
                     <Layers className="h-5 w-5 text-emerald-400" />
-                    <span>Process-Status Distribution</span>
+                    <span>{t.statusChartTitle}</span>
                   </h3>
-                  <p className="text-xs text-gray-400">Dynamic count of waste batches by operational status</p>
+                  <p className="text-xs text-gray-400">Current status of all recorded piles</p>
                 </div>
                 <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-emerald-900/40 text-emerald-300 border border-emerald-800/40">
                   {batches.length} Total Records
@@ -246,7 +236,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, onSelectBatc
                     <YAxis stroke="#9ca3af" fontSize={11} allowDecimals={false} />
                     <Tooltip 
                       contentStyle={{ backgroundColor: '#0c1813', borderColor: '#10b981', color: '#fff', borderRadius: '8px' }}
-                      formatter={(val: any) => [`${val ?? 0} batches`, 'Count']}
+                      formatter={(val: any) => [`${val ?? 0} piles`, 'Count']}
                     />
                     <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                       {processStatusChartData.map((entry, index) => (
@@ -261,7 +251,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, onSelectBatc
             {/* Status Pie Chart */}
             <div className="glass-panel p-6 border border-emerald-800/30 flex flex-col justify-between">
               <div>
-                <h3 className="text-lg font-bold text-white">Status Share</h3>
+                <h3 className="text-lg font-bold text-white">Status Breakdown</h3>
                 <p className="text-xs text-gray-400">Proportional breakdown of saved records</p>
               </div>
 
@@ -290,9 +280,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, onSelectBatc
 
               <button
                 onClick={() => setActiveTab('batch-history')}
-                className="w-full text-center text-xs font-semibold text-emerald-400 hover:text-emerald-300 py-1.5 flex items-center justify-center space-x-1"
+                className="w-full text-center text-xs font-bold text-emerald-400 hover:text-emerald-300 py-1.5 flex items-center justify-center space-x-1"
               >
-                <span>Manage All {batches.length} Batches</span>
+                <span>View History Logbook ({batches.length})</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>
@@ -303,20 +293,20 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, onSelectBatc
           <div className="glass-panel p-6 border border-emerald-800/30 space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-xl font-bold text-white flex items-center space-x-2">
-                  <span>Recent Waste Batches</span>
+                <h3 className="text-xl font-extrabold text-white flex items-center space-x-2">
+                  <span>{t.recentBatchesTitle}</span>
                   <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-700/50">
                     Latest {recentBatches.length}
                   </span>
                 </h3>
-                <p className="text-xs text-gray-400">Saved waste records ordered by recent logging date</p>
+                <p className="text-xs text-gray-400">Saved waste entries sorted by collection date</p>
               </div>
 
               <button
                 onClick={() => setActiveTab('batch-history')}
                 className="text-xs font-semibold text-emerald-300 hover:text-emerald-200 flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-emerald-900/40 border border-emerald-700/40"
               >
-                <span>View Batch History</span>
+                <span>{t.navHistory}</span>
                 <ArrowRight className="h-3.5 w-3.5" />
               </button>
             </div>
@@ -342,8 +332,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, onSelectBatc
                       </div>
 
                       <div className="flex items-center justify-between text-xs text-gray-300 pt-1">
-                        <span>Category: <strong className="text-emerald-300">{batch.category}</strong></span>
-                        <span>Quantity: <strong className="text-white">{batch.weightKg} kg</strong></span>
+                        <span>Type: <strong className="text-emerald-300">{batch.category}</strong></span>
+                        <span>{t.weightLabel}: <strong className="text-white">{batch.weightKg} kg</strong></span>
                       </div>
                     </div>
 
@@ -352,7 +342,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, onSelectBatc
                       <div className="flex items-center space-x-2">
                         <Thermometer className="h-4 w-4 text-amber-400" />
                         <div>
-                          <span className="text-gray-400 block text-[10px]">Temp</span>
+                          <span className="text-gray-400 block text-[10px]">{t.heatLabel}</span>
                           <span className="font-bold text-white">
                             {latestReading ? `${latestReading.temperatureC}°C` : '--'}
                           </span>
@@ -362,7 +352,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, onSelectBatc
                       <div className="flex items-center space-x-2">
                         <Droplets className="h-4 w-4 text-blue-400" />
                         <div>
-                          <span className="text-gray-400 block text-[10px]">Moisture</span>
+                          <span className="text-gray-400 block text-[10px]">{t.wetnessLabel}</span>
                           <span className="font-bold text-white">
                             {latestReading ? `${latestReading.moisturePercent}%` : `${batch.moisturePercent}%`}
                           </span>
@@ -381,9 +371,9 @@ export const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, onSelectBatc
                           if (onSelectBatchForMonitor) onSelectBatchForMonitor(batch.id);
                           setActiveTab('process-monitor');
                         }}
-                        className="text-emerald-400 hover:text-emerald-300 font-semibold"
+                        className="text-emerald-400 hover:text-emerald-300 font-bold"
                       >
-                        Monitor &rarr;
+                        {t.logReadingBtn} &rarr;
                       </button>
                     </div>
                   </div>

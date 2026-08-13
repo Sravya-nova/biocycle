@@ -3,6 +3,7 @@ import type { WasteCategory, WasteBatch, WasteSource, RecommendationResult } fro
 import { WASTE_CATEGORIES } from '../data/categories';
 import { saveBatch, saveRecommendation } from '../services/storageService';
 import { calculateRecommendation } from '../services/recommendationEngine';
+import { useLanguage } from '../context/LanguageContext';
 import type { NavTab } from '../components/Navbar';
 import { 
   PlusCircle, 
@@ -23,6 +24,8 @@ interface AddWasteBatchProps {
 }
 
 export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBatchAdded }) => {
+  const { t } = useLanguage();
+
   // Form State
   const [wasteTypeOption, setWasteTypeOption] = useState<string>('Banana Peels (Fruit Scraps)');
   const [weightKg, setWeightKg] = useState<number>(100);
@@ -31,7 +34,7 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
   const [wasteSource, setWasteSource] = useState<WasteSource>('Household Kitchen');
   const [date, setDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [description, setDescription] = useState<string>('');
-  const [location, setLocation] = useState<string>('Zone A - Aerobic Compost Bay 1');
+  const [location, setLocation] = useState<string>('Zone A - Compost Bay 1');
 
   // Validation Error Messages State
   const [errors, setErrors] = useState<{ weight?: string; moisture?: string; ph?: string }>({});
@@ -54,15 +57,15 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
     const newErrors: { weight?: string; moisture?: string; ph?: string } = {};
 
     if (weightKg <= 0 || isNaN(weightKg)) {
-      newErrors.weight = 'Quantity must be greater than 0 kg.';
+      newErrors.weight = 'Weight must be greater than 0 kg.';
     }
 
     if (moisturePercent < 0 || moisturePercent > 100 || isNaN(moisturePercent)) {
-      newErrors.moisture = 'Moisture percentage must be between 0% and 100%.';
+      newErrors.moisture = 'Wateriness / wetness must be between 0% and 100%.';
     }
 
     if (initialPh < 0 || initialPh > 14 || isNaN(initialPh)) {
-      newErrors.ph = 'Initial pH must be between 0.0 and 14.0.';
+      newErrors.ph = 'Sourness (pH) must be between 0.0 and 14.0.';
     }
 
     setErrors(newErrors);
@@ -97,21 +100,14 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
       hasContaminants: false
     };
 
-    // 1. Save Batch to localStorage
     saveBatch(newBatch);
 
-    // 2. Immediately Generate Recommendation using the biotechnology engine
     const recommendation = calculateRecommendation(newBatch);
-
-    // Update batch status & harvest date with recommendation
     newBatch.treatmentMethod = recommendation.recommendedMethod;
     newBatch.targetHarvestDate = new Date(Date.now() + recommendation.estimatedDurationDays * 86400000).toISOString();
     saveBatch(newBatch);
-
-    // 3. Save Recommendation to localStorage
     saveRecommendation(recommendation);
 
-    // 4. Set Success Result
     setSubmittedResult({
       batch: newBatch,
       recommendation
@@ -132,8 +128,8 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
             <PlusCircle className="h-7 w-7" />
           </div>
           <div>
-            <h1 className="text-2xl font-extrabold text-white">Add Waste Batch</h1>
-            <p className="text-xs text-gray-300">Log incoming organic waste stream and trigger immediate biological recommendation</p>
+            <h1 className="text-2xl font-extrabold text-white">{t.addBatchTitle}</h1>
+            <p className="text-xs text-gray-300">{t.addBatchSubtitle}</p>
           </div>
         </div>
       </div>
@@ -147,7 +143,7 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
               <CheckCircle2 className="h-8 w-8" />
             </div>
             <div>
-              <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest block">Batch Logged & Recommendation Generated</span>
+              <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest block">{t.batchSuccessTitle}</span>
               <h2 className="text-xl font-bold text-white">
                 {submittedResult.batch.name} ({submittedResult.batch.weightKg} kg)
               </h2>
@@ -159,13 +155,13 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center space-x-2">
                 <Sparkles className="h-5 w-5 text-emerald-400" />
-                <span className="text-xs font-bold text-emerald-300 uppercase tracking-wider">Recommended Treatment:</span>
+                <span className="text-xs font-bold text-emerald-300 uppercase tracking-wider">Suggested Treatment:</span>
                 <span className="text-lg font-extrabold text-white px-3 py-1 bg-emerald-900/80 rounded-lg border border-emerald-600">
                   {submittedResult.recommendation.recommendedMethod}
                 </span>
               </div>
               <span className="text-xs font-bold text-emerald-400 bg-emerald-950 px-2.5 py-1 rounded-full border border-emerald-700">
-                Match Score: {submittedResult.recommendation.confidenceScore}%
+                Match Confidence: {submittedResult.recommendation.confidenceScore}%
               </span>
             </div>
 
@@ -173,12 +169,12 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
               {submittedResult.recommendation.primaryReason}
             </p>
 
-            {/* Active Warnings if any */}
+            {/* Active Warnings */}
             {submittedResult.recommendation.warnings.length > 0 && (
               <div className="p-3 bg-red-950/40 border border-red-800/50 rounded-xl space-y-1 text-xs text-red-200">
                 <div className="flex items-center space-x-1.5 font-bold text-red-400">
                   <ShieldAlert className="h-4 w-4" />
-                  <span>Active Warnings:</span>
+                  <span>Things to Watch Out For:</span>
                 </div>
                 {submittedResult.recommendation.warnings.map((w, idx) => (
                   <p key={idx}>• {w}</p>
@@ -191,7 +187,7 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
               <div className="space-y-1.5 text-xs text-emerald-200">
                 <span className="font-bold text-emerald-300 flex items-center space-x-1">
                   <Info className="h-4 w-4 text-emerald-400" />
-                  <span>Immediate Suggested Actions:</span>
+                  <span>Immediate Easy Actions to Take:</span>
                 </span>
                 {submittedResult.recommendation.suggestedActions.map((act, idx) => (
                   <div key={idx} className="bg-[#05110b] p-2.5 rounded-lg border border-emerald-900/60 text-gray-300">
@@ -205,7 +201,7 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 text-xs">
               {submittedResult.recommendation.expectedYield.compostKg > 0 && (
                 <div className="bg-[#05110b] p-3 rounded-lg border border-emerald-900/50">
-                  <span className="text-gray-400 block text-[10px]">Compost Yield</span>
+                  <span className="text-gray-400 block text-[10px]">Solid Compost Yield</span>
                   <strong className="text-emerald-400 text-base">{submittedResult.recommendation.expectedYield.compostKg} kg</strong>
                 </div>
               )}
@@ -217,12 +213,12 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
               )}
               {submittedResult.recommendation.expectedYield.biofertilizerLiters > 0 && (
                 <div className="bg-[#05110b] p-3 rounded-lg border border-emerald-900/50">
-                  <span className="text-gray-400 block text-[10px]">Biofertilizer</span>
+                  <span className="text-gray-400 block text-[10px]">Liquid Biofertilizer</span>
                   <strong className="text-blue-400 text-base">{submittedResult.recommendation.expectedYield.biofertilizerLiters} L</strong>
                 </div>
               )}
               <div className="bg-[#05110b] p-3 rounded-lg border border-emerald-900/50">
-                <span className="text-gray-400 block text-[10px]">Est. Duration</span>
+                <span className="text-gray-400 block text-[10px]">Estimated Days</span>
                 <strong className="text-white text-base">{submittedResult.recommendation.estimatedDurationDays} Days</strong>
               </div>
             </div>
@@ -233,10 +229,10 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
           <div className="flex flex-wrap justify-end gap-4 pt-2">
             <button
               onClick={() => setActiveTab('recommendation')}
-              className="flex items-center space-x-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold rounded-xl shadow-lg transition-all text-sm"
+              className="flex items-center space-x-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-extrabold rounded-xl shadow-lg transition-all text-sm"
             >
               <Sparkles className="h-4 w-4" />
-              <span>Inspect Full Rule Logic Tracing</span>
+              <span>Inspect Step-by-Step Reasons</span>
             </button>
             <button
               onClick={() => {
@@ -246,7 +242,7 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
               className="flex items-center space-x-2 px-4 py-2.5 bg-emerald-950 text-emerald-300 border border-emerald-700/50 rounded-xl hover:bg-emerald-900 transition-all text-sm font-semibold"
             >
               <PlusCircle className="h-4 w-4" />
-              <span>Add Another Batch</span>
+              <span>Add Another Entry</span>
             </button>
           </div>
 
@@ -260,21 +256,21 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
               {/* 1. Waste Type Dropdown */}
               <div className="space-y-2">
                 <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider">
-                  Waste Type Sample Options *
+                  {t.chooseWasteType}
                 </label>
                 <select
                   value={wasteTypeOption}
                   onChange={(e) => handleWasteTypeChange(e.target.value)}
                   className="w-full px-4 py-2.5 bg-[#07130e] border border-emerald-800/50 rounded-xl text-white focus:outline-none focus:border-emerald-500 text-sm font-semibold"
                 >
-                  <option value="Banana Peels (Fruit Scraps)">Banana Peels (Fruit Scraps)</option>
-                  <option value="Vegetable Waste (Kitchen Scraps)">Vegetable Waste (Kitchen Scraps)</option>
-                  <option value="Dry Leaves & Straw">Dry Leaves & Straw</option>
-                  <option value="Mixed Food Waste">Mixed Food Waste</option>
-                  <option value="Animal Manure">Animal Manure</option>
-                  <option value="Coffee Grounds">Coffee Grounds</option>
-                  <option value="Sawdust & Wood Chips">Sawdust & Wood Chips</option>
-                  <option value="Cardboard & Paper Shreds">Cardboard & Paper Shreds</option>
+                  <option value="Banana Peels (Fruit Scraps)">Banana Peels & Fruit Skins (फल-सब्जी के छिलके)</option>
+                  <option value="Vegetable Waste (Kitchen Scraps)">Vegetable Trimmings & Kitchen Waste (रसोई का कचरा)</option>
+                  <option value="Dry Leaves & Straw">Dry Leaves, Grass & Straw (सूखे पत्ते और भूसा)</option>
+                  <option value="Mixed Food Waste">Mixed Dining Food Waste (बचा हुआ भोजन)</option>
+                  <option value="Animal Manure">Cow Dung & Farm Manure (गोबर और पशु अपशिष्ट)</option>
+                  <option value="Coffee Grounds">Used Coffee & Tea Waste (चाय-कॉफी पत्ती)</option>
+                  <option value="Sawdust & Wood Chips">Wood Sawdust & Chips (लकड़ी का बुरादा)</option>
+                  <option value="Cardboard & Paper Shreds">Paper & Cardboard Shreds (कागज और गत्ता)</option>
                 </select>
                 <p className="text-[11px] text-gray-400">
                   {WASTE_CATEGORIES[wasteTypeOption]?.description}
@@ -284,7 +280,7 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
               {/* 2. Quantity in Kilograms */}
               <div className="space-y-2">
                 <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider">
-                  Quantity (kilograms) *
+                  {t.enterWeight}
                 </label>
                 <div className="relative">
                   <input
@@ -307,8 +303,8 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
               {/* 3. Moisture Percentage */}
               <div className="space-y-2">
                 <div className="flex justify-between text-xs">
-                  <label className="font-bold text-gray-300 uppercase tracking-wider">Moisture Percentage (%) *</label>
-                  <span className="font-extrabold text-blue-400">{moisturePercent}%</span>
+                  <label className="font-bold text-gray-300 uppercase tracking-wider">{t.howWetQuestion}</label>
+                  <span className="font-extrabold text-blue-400">{moisturePercent}% ({t.wetnessSimple})</span>
                 </div>
                 <div className="relative">
                   <input
@@ -339,9 +335,9 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
               {/* 4. Initial pH */}
               <div className="space-y-2">
                 <div className="flex justify-between text-xs">
-                  <label className="font-bold text-gray-300 uppercase tracking-wider">Initial pH *</label>
-                  <span className={`font-extrabold ${initialPh < 5 ? 'text-red-400 font-extrabold' : 'text-purple-300'}`}>
-                    {initialPh} pH {initialPh < 5 ? '(Acidic Warning)' : ''}
+                  <label className="font-bold text-gray-300 uppercase tracking-wider">{t.isSourQuestion}</label>
+                  <span className={`font-extrabold ${initialPh < 5 ? 'text-red-400' : 'text-purple-300'}`}>
+                    {initialPh} pH {initialPh < 5 ? '(Sour Warning)' : '(Normal)'}
                   </span>
                 </div>
                 <div className="relative">
@@ -374,19 +370,18 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
 
               {/* 5. Source */}
               <div className="space-y-2">
-                <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider">Source *</label>
+                <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider">{t.whereFromQuestion}</label>
                 <div className="relative">
                   <select
                     value={wasteSource}
                     onChange={(e) => setWasteSource(e.target.value as WasteSource)}
                     className="w-full pl-10 pr-4 py-2.5 bg-[#07130e] border border-emerald-800/50 rounded-xl text-white focus:outline-none focus:border-emerald-500 text-sm font-semibold"
                   >
-                    <option value="Household Kitchen">Household Kitchen</option>
-                    <option value="Commercial Restaurant / Dining">Commercial Restaurant / Dining</option>
-                    <option value="Farm & Livestock">Farm & Livestock</option>
-                    <option value="Agricultural Processing">Agricultural Processing</option>
-                    <option value="Municipal Yard Waste">Municipal Yard Waste</option>
-                    <option value="Industrial Food Processing">Industrial Food Processing</option>
+                    <option value="Household Kitchen">Home / Kitchen (घर/रसोई / ఇల్లు)</option>
+                    <option value="Commercial Restaurant / Dining">Restaurant / Canteen (होटल/कैंटीन)</option>
+                    <option value="Farm & Livestock">Farm & Barn Yard (खेत और गौशाला / పొలం-పశువుల సాల)</option>
+                    <option value="Agricultural Processing">Agricultural Processing (कृषि मंडी)</option>
+                    <option value="Municipal Yard Waste">Garden & Yard Waste (बगीचा/पार्क)</option>
                   </select>
                   <Building2 className="h-4 w-4 text-emerald-500 absolute left-3 top-3" />
                 </div>
@@ -394,7 +389,7 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
 
               {/* 6. Date */}
               <div className="space-y-2">
-                <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider">Date *</label>
+                <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider">{t.dateLabel}</label>
                 <div className="relative">
                   <input
                     type="date"
@@ -411,24 +406,24 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
 
             {/* Optional Facility Location */}
             <div className="space-y-2 pt-2 border-t border-emerald-900/40">
-              <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider">Processing Bay / Facility Location</label>
+              <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider">Storage Bay or Pile Location</label>
               <input
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. Zone A - Aerobic Compost Bay 1"
+                placeholder="e.g. Backyard Compost Heap 1"
                 className="w-full px-4 py-2 bg-[#07130e] border border-emerald-800/50 rounded-xl text-white text-xs placeholder-gray-500 focus:outline-none focus:border-emerald-500"
               />
             </div>
 
             {/* 7. Optional Description / Notes */}
             <div className="space-y-2">
-              <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider">Optional Description & Source Notes</label>
+              <label className="block text-xs font-bold text-gray-300 uppercase tracking-wider">{t.notesLabel}</label>
               <textarea
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Supplier notes, moisture origin, pre-shredding particle size..."
+                placeholder="e.g. Fresh banana skins mixed with spinach leaves..."
                 className="w-full px-4 py-2.5 bg-[#07130e] border border-emerald-800/50 rounded-xl text-white text-sm placeholder-gray-500 focus:outline-none focus:border-emerald-500"
               />
             </div>
@@ -438,10 +433,10 @@ export const AddWasteBatch: React.FC<AddWasteBatchProps> = ({ setActiveTab, onBa
           <div className="flex justify-end">
             <button
               type="submit"
-              className="flex items-center space-x-2 px-6 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold rounded-xl shadow-lg transition-all text-sm"
+              className="flex items-center space-x-2 px-6 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-extrabold rounded-xl shadow-lg transition-all text-sm"
             >
               <CheckCircle2 className="h-5 w-5" />
-              <span>Save Batch & Generate Immediate Recommendation</span>
+              <span>{t.submitBatchBtn}</span>
             </button>
           </div>
         </form>

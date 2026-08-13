@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
+import { useLanguage } from '../context/LanguageContext';
+import type { Language } from '../i18n/translations';
 import { 
+  Recycle, 
   LayoutDashboard, 
   PlusCircle, 
   Sparkles, 
   Activity, 
   Calculator, 
   History, 
-  Sprout, 
+  Globe, 
   Menu, 
   X,
   RotateCcw
@@ -14,123 +17,146 @@ import {
 import { resetStorageToDefaults } from '../services/storageService';
 
 export type NavTab = 
-  | 'dashboard'
-  | 'add-batch'
-  | 'recommendation'
-  | 'process-monitor'
-  | 'impact-calculator'
+  | 'dashboard' 
+  | 'add-batch' 
+  | 'recommendation' 
+  | 'process-monitor' 
+  | 'impact-calculator' 
   | 'batch-history';
 
 interface NavbarProps {
   activeTab: NavTab;
   setActiveTab: (tab: NavTab) => void;
-  onResetData: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab, onResetData }) => {
+export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
+  const { language, setLanguage, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navItems: { id: NavTab; label: string; icon: React.FC<{ className?: string }> }[] = [
-    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'add-batch', label: 'Add Waste Batch', icon: PlusCircle },
-    { id: 'recommendation', label: 'Recommendation', icon: Sparkles },
-    { id: 'process-monitor', label: 'Process Monitor', icon: Activity },
-    { id: 'impact-calculator', label: 'Impact Calculator', icon: Calculator },
-    { id: 'batch-history', label: 'Batch History', icon: History }
+  const navItems: { id: NavTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+    { id: 'dashboard', label: t.navDashboard, icon: LayoutDashboard },
+    { id: 'add-batch', label: t.navAddBatch, icon: PlusCircle },
+    { id: 'recommendation', label: t.navRecommendation, icon: Sparkles },
+    { id: 'process-monitor', label: t.navMonitor, icon: Activity },
+    { id: 'impact-calculator', label: t.navCalculator, icon: Calculator },
+    { id: 'batch-history', label: t.navHistory, icon: History },
   ];
 
-  const handleNavClick = (tabId: NavTab) => {
-    setActiveTab(tabId);
-    setMobileMenuOpen(false);
-  };
-
-  const handleResetClick = () => {
-    if (window.confirm('Reset all waste batches and sensor logs to demo seed data?')) {
+  const handleResetData = () => {
+    if (window.confirm('Reset all demo data back to default initial state?')) {
       resetStorageToDefaults();
-      onResetData();
+      window.location.reload();
     }
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#09120e]/90 backdrop-blur-md border-b border-emerald-800/30">
+    <header className="sticky top-0 z-40 backdrop-blur-md bg-[#07130e]/90 border-b border-emerald-900/50 shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 sm:h-20">
           
-          {/* Logo & Brand */}
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => handleNavClick('dashboard')}>
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-700 flex items-center justify-center shadow-lg shadow-emerald-950">
-              <Sprout className="h-6 w-6 text-emerald-950" />
+          {/* Logo & Plain Language Title */}
+          <div 
+            className="flex items-center space-x-3 cursor-pointer group"
+            onClick={() => setActiveTab('dashboard')}
+          >
+            <div className="p-2.5 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-emerald-950 shadow-md group-hover:scale-105 transition-transform">
+              <Recycle className="h-6 w-6 sm:h-7 sm:w-7 stroke-[2.5]" />
             </div>
             <div>
-              <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-xl tracking-tight text-white">Bio<span className="text-emerald-400">Cycle</span></span>
-                <span className="text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded-full bg-emerald-900/60 text-emerald-300 border border-emerald-700/50">Bio-Tech</span>
-              </div>
-              <p className="text-xs text-emerald-300/60 hidden sm:block">Organic Waste Conversion & Monitoring</p>
+              <span className="text-xl sm:text-2xl font-extrabold text-white tracking-tight block">
+                {t.appName}
+              </span>
+              <span className="text-[10px] sm:text-xs text-emerald-400 font-semibold hidden sm:block">
+                {t.appTagline}
+              </span>
             </div>
           </div>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
+          {/* Desktop Navigation */}
+          <nav className="hidden lg:flex items-center space-x-1 bg-[#040e0a] p-1.5 rounded-2xl border border-emerald-900/60">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
+
               return (
                 <button
                   key={item.id}
-                  onClick={() => handleNavClick(item.id)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActive 
-                      ? 'bg-emerald-600/20 text-emerald-300 border border-emerald-500/40 shadow-sm' 
+                  onClick={() => setActiveTab(item.id)}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+                    isActive
+                      ? 'bg-emerald-500 text-emerald-950 shadow-md'
                       : 'text-gray-300 hover:text-white hover:bg-emerald-950/40'
                   }`}
                 >
-                  <Icon className={`h-4 w-4 ${isActive ? 'text-emerald-400' : 'text-gray-400'}`} />
+                  <Icon className="h-4 w-4" />
                   <span>{item.label}</span>
                 </button>
               );
             })}
           </nav>
 
-          {/* Right Action: Reset Demo Data & Mobile Menu Trigger */}
+          {/* Right Controls: Language Selector & Reset Data */}
           <div className="flex items-center space-x-3">
+            
+            {/* Global Language Selector Dropdown */}
+            <div className="relative flex items-center bg-[#040e0a] border border-emerald-700/60 rounded-xl px-2.5 py-1.5 text-xs font-bold">
+              <Globe className="h-4 w-4 text-emerald-400 mr-1.5 shrink-0" />
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as Language)}
+                className="bg-transparent text-emerald-300 font-extrabold focus:outline-none cursor-pointer text-xs pr-1"
+                aria-label="Language Selector"
+              >
+                <option value="en" className="bg-[#08150e] text-white">English (Simple)</option>
+                <option value="hi" className="bg-[#08150e] text-white">हिंदी (Hindi)</option>
+                <option value="te" className="bg-[#08150e] text-white">తెలుగు (Telugu)</option>
+                <option value="es" className="bg-[#08150e] text-white">Español (Spanish)</option>
+              </select>
+            </div>
+
+            {/* Reset Data Icon Button */}
             <button
-              onClick={handleResetClick}
-              title="Reset to Demo Data"
-              className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-emerald-300 bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-800/40 rounded-lg transition-all"
+              onClick={handleResetData}
+              title="Reset Storage to Seed Demo Data"
+              className="p-2 text-gray-400 hover:text-emerald-300 hover:bg-emerald-950/50 rounded-xl transition-all border border-transparent hover:border-emerald-800/40 hidden sm:block"
             >
-              <RotateCcw className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Reset Demo Data</span>
+              <RotateCcw className="h-4 w-4" />
             </button>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Drawer Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-gray-300 hover:text-white hover:bg-emerald-950/60 focus:outline-none"
+              className="lg:hidden p-2 rounded-xl text-gray-300 hover:text-white hover:bg-emerald-950/60 border border-emerald-900/50"
             >
               {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
+
           </div>
+
         </div>
       </div>
 
-      {/* Mobile Drawer Navigation */}
+      {/* Mobile Navigation Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#0c1813] border-b border-emerald-800/40 px-4 pt-2 pb-4 space-y-1">
+        <div className="lg:hidden bg-[#05110c] border-b border-emerald-900/60 px-4 py-4 space-y-2">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
+
             return (
               <button
                 key={item.id}
-                onClick={() => handleNavClick(item.id)}
-                className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-base font-medium transition-all ${
+                onClick={() => {
+                  setActiveTab(item.id);
+                  setMobileMenuOpen(false);
+                }}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-bold transition-all ${
                   isActive
-                    ? 'bg-emerald-600/25 text-emerald-300 border border-emerald-500/40'
+                    ? 'bg-emerald-500 text-emerald-950 shadow-md'
                     : 'text-gray-300 hover:bg-emerald-950/50 hover:text-white'
                 }`}
               >
-                <Icon className={`h-5 w-5 ${isActive ? 'text-emerald-400' : 'text-gray-400'}`} />
+                <Icon className="h-5 w-5" />
                 <span>{item.label}</span>
               </button>
             );

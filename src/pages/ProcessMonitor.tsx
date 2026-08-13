@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { WasteBatch, ProcessReading, ProcessStage, OdorObservation } from '../types/biocycle';
 import { getBatches, getReadings, addReading, updateBatchProcessStage } from '../services/storageService';
 import { BatchStatusBadge } from '../components/BatchStatusBadge';
+import { useLanguage } from '../context/LanguageContext';
 import { 
   Activity, 
   Thermometer, 
@@ -29,6 +30,7 @@ interface ProcessMonitorProps {
 }
 
 export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId }) => {
+  const { t } = useLanguage();
   const [batches, setBatches] = useState<WasteBatch[]>([]);
   const [activeBatch, setActiveBatch] = useState<WasteBatch | null>(null);
   const [readings, setReadings] = useState<ProcessReading[]>([]);
@@ -78,32 +80,32 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
     const generatedWarnings: string[] = [];
 
     if (tempC > 65) {
-      generatedWarnings.push('Thermal Overheating (>65°C): Heat exceeds maximum microbial tolerance. Turn pile immediately.');
+      generatedWarnings.push('Too Hot (>65°C): Heap is getting too hot! Turn the pile with a fork immediately to cool it.');
     } else if (tempC < 35 && activeBatch.processStage === 'Active monitoring') {
-      generatedWarnings.push('Thermal Cooling Deficit (<35°C): Heap cooling prematurely during active decomposition.');
+      generatedWarnings.push('Too Cool (<35°C): Heap is cooling down too early. Add fresh green food scraps or water.');
     }
 
     if (phLevel < 5.0) {
-      generatedWarnings.push(`Acidic Substrate Warning (pH ${phLevel}): Low pH inhibits bacterial breakdown.`);
+      generatedWarnings.push(`Too Sour (pH ${phLevel}): Very acidic. Add wood ash or agricultural lime to fix it.`);
     } else if (phLevel > 8.5) {
-      generatedWarnings.push(`Alkaline Warning (pH ${phLevel}): High pH increases gaseous ammonia volatilization.`);
+      generatedWarnings.push(`Too Alkaline (pH ${phLevel}): Smells strong like ammonia. Mix in dry brown leaves.`);
     }
 
     if (moisturePercent < 40) {
-      generatedWarnings.push('Moisture Deficit (<40%): Dry conditions slow biological decomposition.');
+      generatedWarnings.push('Too Dry (<40%): The heap needs water. Sprinkle water or wet food scraps.');
     } else if (moisturePercent > 70) {
-      generatedWarnings.push('Saturated Moisture (>70%): Excessive water risks anaerobic compaction and odor.');
+      generatedWarnings.push('Too Wet (>70%): Too much water! Add dry sawdust, dry leaves, or straw.');
     }
 
     if (odor === 'Foul Anaerobic / H2S (Rotten Odor)') {
-      generatedWarnings.push('Foul Anaerobic Odor Detected: Lack of oxygen flow. Turn pile or insert aeration pipes.');
+      generatedWarnings.push('Stinking Rotten Odor: Needs fresh air! Turn the heap with a garden fork.');
     } else if (odor === 'Pungent Ammonia (Excess Nitrogen)') {
-      generatedWarnings.push('Ammonia Off-Gassing: C:N ratio is too low. Blend dry carbon material (leaves/sawdust).');
+      generatedWarnings.push('Strong Ammonia Smell: Add dry brown carbon materials like leaves or cardboard.');
     }
 
     let healthStatus: 'Optimal' | 'Caution' | 'Critical' = 'Optimal';
     if (generatedWarnings.length > 0) {
-      healthStatus = generatedWarnings.some(w => w.includes('Overheating') || w.includes('Foul') || w.includes('Acidic')) ? 'Critical' : 'Caution';
+      healthStatus = generatedWarnings.some(w => w.includes('Too Hot') || w.includes('Stinking') || w.includes('Too Sour')) ? 'Critical' : 'Caution';
     }
 
     addReading({
@@ -125,7 +127,6 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
 
   const latestReading = readings.length > 0 ? readings[readings.length - 1] : null;
 
-  // Formatting telemetry chart data
   const chartData = readings.map(r => ({
     date: new Date(r.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
     temperature: r.temperatureC,
@@ -133,7 +134,6 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
     moisture: r.moisturePercent
   }));
 
-  // Dynamic warnings list for current batch
   const activeWarnings = latestReading?.warnings || [];
 
   const stageBadges: Record<ProcessStage, string> = {
@@ -154,14 +154,14 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
               <Activity className="h-7 w-7" />
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold text-white">Process Telemetry Monitor</h1>
-              <p className="text-xs text-gray-300">Biological parameter tracking, process stage control, and telemetry charts</p>
+              <h1 className="text-2xl font-extrabold text-white">{t.monitorTitle}</h1>
+              <p className="text-xs text-gray-300">{t.monitorSubtitle}</p>
             </div>
           </div>
 
           {/* Select Saved Waste Batch */}
           <div className="min-w-[240px]">
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Select Saved Waste Batch</label>
+            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{t.selectBatchPrompt}</label>
             <select
               value={activeBatch?.id || ''}
               onChange={(e) => handleBatchSelect(e.target.value)}
@@ -179,7 +179,7 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
 
       {!activeBatch ? (
         <div className="glass-panel p-12 text-center text-gray-400">
-          <p>No waste batch selected.</p>
+          <p>No waste pile selected.</p>
         </div>
       ) : (
         <div className="space-y-6">
@@ -199,10 +199,10 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
 
               <button
                 onClick={() => setShowLogModal(true)}
-                className="flex items-center space-x-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold rounded-xl shadow-lg transition-all text-sm"
+                className="flex items-center space-x-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-extrabold rounded-xl shadow-lg transition-all text-sm"
               >
                 <PlusCircle className="h-4 w-4" />
-                <span>Log New Reading</span>
+                <span>{t.logReadingBtn}</span>
               </button>
             </div>
 
@@ -210,7 +210,7 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
             <div className="pt-3 border-t border-emerald-900/50 flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center space-x-2">
                 <Layers className="h-4 w-4 text-emerald-400" />
-                <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">Current Process Stage:</span>
+                <span className="text-xs font-bold text-gray-300 uppercase tracking-wider">{t.currentStageLabel}</span>
                 <span className={`px-3 py-1 rounded-full text-xs font-extrabold border ${stageBadges[activeBatch.processStage || 'Active monitoring']}`}>
                   {activeBatch.processStage || 'Active monitoring'}
                 </span>
@@ -218,7 +218,7 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
 
               {/* Stage Transition Selector */}
               <div className="flex items-center space-x-2 text-xs">
-                <span className="text-gray-400">Update Stage:</span>
+                <span className="text-gray-400">{t.updateStageLabel}</span>
                 <select
                   value={activeBatch.processStage || 'Active monitoring'}
                   onChange={(e) => handleStageChange(e.target.value as ProcessStage)}
@@ -227,21 +227,19 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
                   <option value="Not started">Not started</option>
                   <option value="Active monitoring">Active monitoring</option>
                   <option value="Maturation">Maturation</option>
-                  <option value="Ready for laboratory testing">Ready for laboratory testing</option>
+                  <option value="Ready for laboratory testing">Ready for testing</option>
                 </select>
               </div>
             </div>
 
           </div>
 
-          {/* Mandatory Safety Notice: Do NOT label as safe automatically */}
+          {/* Mandatory Safety Notice */}
           <div className="glass-panel p-4 border border-amber-700/50 bg-amber-950/30 flex items-start space-x-3 text-amber-200 text-xs">
             <ShieldAlert className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
             <div className="space-y-1">
-              <h4 className="font-extrabold uppercase tracking-wide text-amber-300">Mandatory Agricultural Safety Notice</h4>
-              <p>
-                Process stage completion indicates <strong>"Ready for laboratory testing"</strong>. BioCycle does NOT label any batch as safe for agricultural or soil application automatically. Independent laboratory testing (for E. coli, Salmonella, heavy metals, and maturity stability) is required prior to agricultural deployment.
-              </p>
+              <h4 className="font-extrabold uppercase tracking-wide text-amber-300">{t.safetyNoticeTitle}</h4>
+              <p>{t.safetyNoticeBody}</p>
             </div>
           </div>
 
@@ -250,23 +248,23 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
             <div className="flex items-center justify-between border-b border-emerald-900/50 pb-3">
               <div className="flex items-center space-x-2">
                 <Clock className="h-5 w-5 text-emerald-400" />
-                <h3 className="text-lg font-bold text-white">Latest Telemetry Reading</h3>
+                <h3 className="text-lg font-bold text-white">{t.latestReadingTitle}</h3>
               </div>
               {latestReading && (
                 <span className="text-xs text-gray-400">
-                  Logged on {new Date(latestReading.timestamp).toLocaleDateString()}
+                  Checked on {new Date(latestReading.timestamp).toLocaleDateString()}
                 </span>
               )}
             </div>
 
             {!latestReading ? (
-              <p className="text-xs text-gray-400 italic">No telemetry readings logged for this batch yet.</p>
+              <p className="text-xs text-gray-400 italic">No daily check logged for this pile yet.</p>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 <div className="bg-[#06120d] p-4 rounded-xl border border-emerald-900/50">
                   <div className="flex items-center space-x-1.5 text-amber-400 text-xs font-semibold mb-1">
                     <Thermometer className="h-4 w-4" />
-                    <span>Temperature</span>
+                    <span>{t.heatLabel}</span>
                   </div>
                   <span className="text-2xl font-extrabold text-white">{latestReading.temperatureC}</span>
                   <span className="text-xs text-amber-400 font-bold ml-1">°C</span>
@@ -275,7 +273,7 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
                 <div className="bg-[#06120d] p-4 rounded-xl border border-emerald-900/50">
                   <div className="flex items-center space-x-1.5 text-purple-400 text-xs font-semibold mb-1">
                     <FlaskConical className="h-4 w-4" />
-                    <span>pH Level</span>
+                    <span>{t.sournessLabel}</span>
                   </div>
                   <span className={`text-2xl font-extrabold ${latestReading.phLevel < 5 ? 'text-red-400' : 'text-white'}`}>
                     {latestReading.phLevel}
@@ -286,7 +284,7 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
                 <div className="bg-[#06120d] p-4 rounded-xl border border-emerald-900/50">
                   <div className="flex items-center space-x-1.5 text-blue-400 text-xs font-semibold mb-1">
                     <Droplets className="h-4 w-4" />
-                    <span>Moisture</span>
+                    <span>{t.wetnessLabel}</span>
                   </div>
                   <span className="text-2xl font-extrabold text-white">{latestReading.moisturePercent}</span>
                   <span className="text-xs text-blue-400 font-bold ml-1">%</span>
@@ -295,7 +293,7 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
                 <div className="bg-[#06120d] p-4 rounded-xl border border-emerald-900/50">
                   <div className="flex items-center space-x-1.5 text-teal-400 text-xs font-semibold mb-1">
                     <Wind className="h-4 w-4" />
-                    <span>Odor Observation</span>
+                    <span>{t.smellLabel}</span>
                   </div>
                   <span className="text-xs font-bold text-emerald-300 block line-clamp-2 mt-1">
                     {latestReading.odorObservation}
@@ -310,7 +308,7 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
             <div className="glass-panel p-5 border border-red-800/50 bg-red-950/30 space-y-3">
               <div className="flex items-center space-x-2 text-red-400 font-bold text-sm uppercase tracking-wide">
                 <AlertTriangle className="h-5 w-5" />
-                <span>Active Process Warnings Detected</span>
+                <span>Warnings & Things to Fix:</span>
               </div>
               <div className="space-y-2">
                 {activeWarnings.map((warn, idx) => (
@@ -330,7 +328,7 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
               <div className="flex items-center justify-between border-b border-emerald-900/50 pb-2">
                 <div className="flex items-center space-x-1.5 text-amber-400 font-bold text-sm">
                   <Thermometer className="h-4 w-4" />
-                  <span>Temperature (°C) Line Chart</span>
+                  <span>{t.tempChartTitle}</span>
                 </div>
                 <span className="text-[10px] text-gray-400">Target: 50-65°C</span>
               </div>
@@ -340,7 +338,7 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
                     <XAxis dataKey="date" stroke="#9ca3af" fontSize={10} />
                     <YAxis stroke="#9ca3af" fontSize={10} domain={[10, 80]} />
                     <Tooltip contentStyle={{ backgroundColor: '#09140f', borderColor: '#f59e0b', color: '#fff', borderRadius: '8px' }} />
-                    <Line type="monotone" dataKey="temperature" name="Temp (°C)" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="temperature" name="Heat (°C)" stroke="#f59e0b" strokeWidth={3} dot={{ r: 4 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -351,7 +349,7 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
               <div className="flex items-center justify-between border-b border-emerald-900/50 pb-2">
                 <div className="flex items-center space-x-1.5 text-purple-400 font-bold text-sm">
                   <FlaskConical className="h-4 w-4" />
-                  <span>pH Balance (0-14) Line Chart</span>
+                  <span>{t.phChartTitle}</span>
                 </div>
                 <span className="text-[10px] text-gray-400">Target: 6.5-7.8</span>
               </div>
@@ -361,7 +359,7 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
                     <XAxis dataKey="date" stroke="#9ca3af" fontSize={10} />
                     <YAxis stroke="#9ca3af" fontSize={10} domain={[3, 10]} />
                     <Tooltip contentStyle={{ backgroundColor: '#09140f', borderColor: '#a855f7', color: '#fff', borderRadius: '8px' }} />
-                    <Line type="monotone" dataKey="pH" name="pH Level" stroke="#a855f7" strokeWidth={3} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="pH" name="Sourness (pH)" stroke="#a855f7" strokeWidth={3} dot={{ r: 4 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -372,7 +370,7 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
               <div className="flex items-center justify-between border-b border-emerald-900/50 pb-2">
                 <div className="flex items-center space-x-1.5 text-blue-400 font-bold text-sm">
                   <Droplets className="h-4 w-4" />
-                  <span>Moisture (%) Line Chart</span>
+                  <span>{t.moistureChartTitle}</span>
                 </div>
                 <span className="text-[10px] text-gray-400">Target: 55-65%</span>
               </div>
@@ -382,7 +380,7 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
                     <XAxis dataKey="date" stroke="#9ca3af" fontSize={10} />
                     <YAxis stroke="#9ca3af" fontSize={10} domain={[0, 100]} />
                     <Tooltip contentStyle={{ backgroundColor: '#09140f', borderColor: '#3b82f6', color: '#fff', borderRadius: '8px' }} />
-                    <Line type="monotone" dataKey="moisture" name="Moisture (%)" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="moisture" name="Wateriness (%)" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -394,7 +392,7 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
           <div className="glass-panel p-6 border border-emerald-800/30 space-y-4">
             <div className="flex items-center space-x-2 border-b border-emerald-900/50 pb-3">
               <FileSpreadsheet className="h-5 w-5 text-emerald-400" />
-              <h3 className="text-lg font-bold text-white">Historical Telemetry Logbook</h3>
+              <h3 className="text-lg font-bold text-white">Daily Check History Logbook</h3>
             </div>
 
             <div className="overflow-x-auto">
@@ -402,11 +400,11 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
                 <thead>
                   <tr className="bg-[#06120d] border-b border-emerald-900/50 text-[10px] uppercase font-bold text-gray-400">
                     <th className="p-3">Date</th>
-                    <th className="p-3">Temp (°C)</th>
-                    <th className="p-3">pH</th>
-                    <th className="p-3">Moisture (%)</th>
-                    <th className="p-3">Odor Observation</th>
-                    <th className="p-3">Health Status</th>
+                    <th className="p-3">Heat (°C)</th>
+                    <th className="p-3">Sourness (pH)</th>
+                    <th className="p-3">Wateriness (%)</th>
+                    <th className="p-3">Smell / Odor</th>
+                    <th className="p-3">Condition</th>
                     <th className="p-3">Notes</th>
                   </tr>
                 </thead>
@@ -443,7 +441,7 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
           <div className="glass-panel p-6 max-w-md w-full border border-emerald-600/50 bg-[#0a1811] space-y-6">
             <div className="flex items-center justify-between border-b border-emerald-900/50 pb-3">
-              <h3 className="text-lg font-bold text-white">Log Process Reading</h3>
+              <h3 className="text-lg font-bold text-white">Record Today's Check</h3>
               <button 
                 onClick={() => setShowLogModal(false)}
                 className="text-gray-400 hover:text-white font-bold"
@@ -469,7 +467,7 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
               {/* Temperature & pH */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">Temperature (°C) *</label>
+                  <label className="block text-xs font-semibold text-gray-300 mb-1">Heat (°C) *</label>
                   <input
                     type="number"
                     required
@@ -480,7 +478,7 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-gray-300 mb-1">pH Level (0-14) *</label>
+                  <label className="block text-xs font-semibold text-gray-300 mb-1">Sourness (pH) *</label>
                   <input
                     type="number"
                     step="0.1"
@@ -496,7 +494,7 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
 
               {/* Moisture */}
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">Moisture (%) *</label>
+                <label className="block text-xs font-semibold text-gray-300 mb-1">Wateriness (%) *</label>
                 <input
                   type="number"
                   min="0"
@@ -510,28 +508,28 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
 
               {/* Odor Observation */}
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">Odor Observation *</label>
+                <label className="block text-xs font-semibold text-gray-300 mb-1">Smell / Odor *</label>
                 <select
                   value={odor}
                   onChange={(e) => setOdor(e.target.value as OdorObservation)}
                   className="w-full px-3 py-2 bg-[#06120d] border border-emerald-800 rounded-lg text-white text-sm font-semibold"
                 >
-                  <option value="Earthy / Fresh Soil (Normal)">Earthy / Fresh Soil (Normal)</option>
-                  <option value="Mild Sweet-Sour (Active Fermentation)">Mild Sweet-Sour (Active Fermentation)</option>
-                  <option value="Pungent Ammonia (Excess Nitrogen)">Pungent Ammonia (Excess Nitrogen)</option>
-                  <option value="Foul Anaerobic / H2S (Rotten Odor)">Foul Anaerobic / H2S (Rotten Odor)</option>
-                  <option value="Odorless">Odorless</option>
+                  <option value="Earthy / Fresh Soil (Normal)">Fresh Earth Smell (Good)</option>
+                  <option value="Mild Sweet-Sour (Active Fermentation)">Mild Sweet-Sour Smell (Fermenting)</option>
+                  <option value="Pungent Ammonia (Excess Nitrogen)">Strong Ammonia Smell (Too Much Green)</option>
+                  <option value="Foul Anaerobic / H2S (Rotten Odor)">Stinking Rotten Smell (Needs Air)</option>
+                  <option value="Odorless">No Smell</option>
                 </select>
               </div>
 
               {/* Notes */}
               <div>
-                <label className="block text-xs font-semibold text-gray-300 mb-1">Notes & Observations</label>
+                <label className="block text-xs font-semibold text-gray-300 mb-1">Notes</label>
                 <textarea
                   rows={2}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Heap turning notes, earthworm activity..."
+                  placeholder="Heap turning notes, worm activity..."
                   className="w-full px-3 py-2 bg-[#06120d] border border-emerald-800 rounded-lg text-white text-sm"
                 />
               </div>
@@ -548,7 +546,7 @@ export const ProcessMonitor: React.FC<ProcessMonitorProps> = ({ selectedBatchId 
                   type="submit"
                   className="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold rounded-lg text-xs"
                 >
-                  Save Reading
+                  Save Check
                 </button>
               </div>
             </form>

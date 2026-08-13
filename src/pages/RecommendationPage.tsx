@@ -3,6 +3,7 @@ import type { WasteCategory, WasteBatch, RecommendationResult, WasteSource } fro
 import { getBatches } from '../services/storageService';
 import { calculateRecommendation } from '../services/recommendationEngine';
 import { AIWasteAssistantPanel } from '../components/AIWasteAssistantPanel';
+import { useLanguage } from '../context/LanguageContext';
 import type { NavTab } from '../components/Navbar';
 import { 
   Sparkles, 
@@ -18,6 +19,7 @@ interface RecommendationPageProps {
 }
 
 export const RecommendationPage: React.FC<RecommendationPageProps> = ({ selectedBatchId }) => {
+  const { t } = useLanguage();
   const [batches, setBatches] = useState<WasteBatch[]>([]);
   const [selectedBatch, setSelectedBatch] = useState<WasteBatch | null>(null);
 
@@ -66,7 +68,7 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({ selected
   const handleReevaluate = () => {
     const tempBatch: WasteBatch = {
       id: selectedBatch ? selectedBatch.id : 'sim_batch',
-      name: selectedBatch ? selectedBatch.name : 'Custom Simulated Stream',
+      name: selectedBatch ? selectedBatch.name : 'Custom Waste Stream',
       category: simCategory,
       weightKg: Number(simWeightKg),
       moisturePercent: Number(simMoisture),
@@ -118,14 +120,14 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({ selected
               <Sparkles className="h-7 w-7" />
             </div>
             <div>
-              <h1 className="text-2xl font-extrabold text-white">Biotechnology Recommendation Engine</h1>
-              <p className="text-xs text-gray-300">Transparent rule-based biological process optimization and AI classification assistant</p>
+              <h1 className="text-2xl font-extrabold text-white">{t.recTitle}</h1>
+              <p className="text-xs text-gray-300">{t.recSubtitle}</p>
             </div>
           </div>
 
           {/* Select Saved Batch Dropdown */}
           <div className="min-w-[240px]">
-            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Select Batch to Evaluate</label>
+            <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Select Saved Waste to Check</label>
             <select
               value={selectedBatch?.id || ''}
               onChange={(e) => handleBatchSelect(e.target.value)}
@@ -152,13 +154,13 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({ selected
           <div className="flex items-center justify-between border-b border-emerald-900/50 pb-3">
             <h3 className="text-lg font-bold text-white flex items-center space-x-2">
               <Layers className="h-5 w-5 text-emerald-400" />
-              <span>Rule Engine Input Parameters</span>
+              <span>Waste Parameters Tuner</span>
             </h3>
             <button
               onClick={handleReevaluate}
               className="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 font-bold rounded-lg text-xs transition-all"
             >
-              Re-run Rule Matrix
+              Re-Calculate Method
             </button>
           </div>
 
@@ -191,7 +193,7 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({ selected
             </div>
 
             <div>
-              <label className="text-gray-400 font-bold block mb-1">Moisture: <span className="text-blue-400">{simMoisture}%</span></label>
+              <label className="text-gray-400 font-bold block mb-1">Wateriness: <span className="text-blue-400">{simMoisture}%</span></label>
               <input
                 type="range"
                 min="10"
@@ -203,7 +205,7 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({ selected
             </div>
 
             <div>
-              <label className="text-gray-400 font-bold block mb-1">Initial pH: <span className={simPh < 5 ? 'text-red-400 font-bold' : 'text-purple-300'}>{simPh}</span></label>
+              <label className="text-gray-400 font-bold block mb-1">Sourness: <span className={simPh < 5 ? 'text-red-400 font-bold' : 'text-purple-300'}>{simPh} pH</span></label>
               <input
                 type="range"
                 min="3.0"
@@ -223,10 +225,10 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({ selected
                 className="w-full px-2.5 py-2 bg-[#06120d] border border-emerald-800 rounded-lg text-white font-semibold truncate"
               >
                 <option value="Household Kitchen">Household Kitchen</option>
-                <option value="Commercial Restaurant / Dining">Commercial Restaurant</option>
+                <option value="Commercial Restaurant / Dining">Restaurant</option>
                 <option value="Farm & Livestock">Farm & Livestock</option>
-                <option value="Agricultural Processing">Agricultural Processing</option>
-                <option value="Municipal Yard Waste">Municipal Yard Waste</option>
+                <option value="Agricultural Processing">Agricultural</option>
+                <option value="Municipal Yard Waste">Yard Waste</option>
               </select>
             </div>
           </div>
@@ -239,14 +241,14 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({ selected
             <div className="glass-panel p-6 sm:p-8 space-y-6 border border-emerald-500/50 bg-gradient-to-br from-emerald-950/60 via-[#0b1e15] to-[#09120e]">
               <div className="flex flex-wrap items-center justify-between gap-4 border-b border-emerald-800/50 pb-4">
                 <div>
-                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest block">Primary Recommended Biotechnology</span>
+                  <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest block">Suggested Natural Method</span>
                   <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
                     {activeRecommendation.recommendedMethod}
                   </h2>
                 </div>
                 <div className="flex items-center space-x-3">
                   <span className="px-3.5 py-1.5 bg-emerald-950 text-emerald-300 border border-emerald-600 rounded-full font-extrabold text-xs">
-                    Match Confidence: {activeRecommendation.confidenceScore}%
+                    Confidence: {activeRecommendation.confidenceScore}%
                   </span>
                   <span className="px-3.5 py-1.5 bg-blue-950 text-blue-300 border border-blue-600 rounded-full font-extrabold text-xs flex items-center space-x-1">
                     <Clock className="h-3.5 w-3.5" />
@@ -264,7 +266,7 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({ selected
                 <div className="p-4 bg-red-950/40 border border-red-800/60 rounded-xl space-y-2 text-xs text-red-200">
                   <div className="flex items-center space-x-2 font-bold text-red-400 text-sm">
                     <ShieldAlert className="h-5 w-5" />
-                    <span>Active Process Warnings Detected ({activeRecommendation.warnings.length}):</span>
+                    <span>Things to Watch Out For ({activeRecommendation.warnings.length}):</span>
                   </div>
                   {activeRecommendation.warnings.map((w, idx) => (
                     <p key={idx} className="pl-7">• {w}</p>
@@ -275,7 +277,7 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({ selected
               {/* Immediate Suggested Actions */}
               {activeRecommendation.suggestedActions.length > 0 && (
                 <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-emerald-300 uppercase tracking-wider">Suggested Corrective Actions:</h4>
+                  <h4 className="text-xs font-bold text-emerald-300 uppercase tracking-wider">Simple Steps to Follow:</h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {activeRecommendation.suggestedActions.map((act, idx) => (
                       <div key={idx} className="p-3 bg-[#06140e] rounded-xl border border-emerald-900/60 text-xs text-gray-200 font-medium">
@@ -289,33 +291,33 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({ selected
               {/* Estimated Yield Output Cards */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
                 <div className="bg-[#06120d] p-4 rounded-xl border border-emerald-900/50">
-                  <span className="text-[10px] text-gray-400 uppercase font-bold block">Compost Yield</span>
+                  <span className="text-[10px] text-gray-400 uppercase font-bold block">Solid Compost Yield</span>
                   <strong className="text-emerald-400 text-xl">{activeRecommendation.expectedYield.compostKg} kg</strong>
                 </div>
                 <div className="bg-[#06120d] p-4 rounded-xl border border-emerald-900/50">
-                  <span className="text-[10px] text-gray-400 uppercase font-bold block">Biogas Yield</span>
+                  <span className="text-[10px] text-gray-400 uppercase font-bold block">Biogas Cooking Gas</span>
                   <strong className="text-amber-400 text-xl">{activeRecommendation.expectedYield.biogasM3} m³</strong>
                 </div>
                 <div className="bg-[#06120d] p-4 rounded-xl border border-emerald-900/50">
-                  <span className="text-[10px] text-gray-400 uppercase font-bold block">Biofertilizer</span>
+                  <span className="text-[10px] text-gray-400 uppercase font-bold block">Liquid Fertilizer</span>
                   <strong className="text-blue-400 text-xl">{activeRecommendation.expectedYield.biofertilizerLiters} L</strong>
                 </div>
                 <div className="bg-[#06120d] p-4 rounded-xl border border-emerald-900/50">
-                  <span className="text-[10px] text-gray-400 uppercase font-bold block">CO₂e Benefit</span>
-                  <strong className="text-mint-400 text-xl text-emerald-300">{activeRecommendation.expectedYield.co2eSavedKg} kg</strong>
+                  <span className="text-[10px] text-gray-400 uppercase font-bold block">Clean Air Benefit</span>
+                  <strong className="text-emerald-300 text-xl">{activeRecommendation.expectedYield.co2eSavedKg} kg</strong>
                 </div>
               </div>
 
             </div>
 
-            {/* TRANSPARENT BIOTECHNOLOGY RULE ENGINE LOGIC INSPECTOR */}
+            {/* TRANSPARENT RULE ENGINE LOGIC INSPECTOR */}
             <div className="glass-panel p-6 border border-emerald-800/40 space-y-6">
               <div className="border-b border-emerald-900/50 pb-3 flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <FileCheck className="h-5 w-5 text-emerald-400" />
-                  <h3 className="text-lg font-bold text-white">Transparent Rule Engine Logic Inspector</h3>
+                  <h3 className="text-lg font-bold text-white">{t.simpleRuleTitle}</h3>
                 </div>
-                <span className="text-xs text-gray-400">All 6 biological rules evaluated explicitly</span>
+                <span className="text-xs text-gray-400">{t.simpleRuleSubtitle}</span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -333,12 +335,12 @@ export const RecommendationPage: React.FC<RecommendationPageProps> = ({ selected
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
                         rule.isMatched ? 'bg-emerald-950 text-emerald-300 border border-emerald-600' : 'bg-gray-900 text-gray-400 border border-gray-800'
                       }`}>
-                        {rule.isMatched ? 'MATCHED (TRUE)' : 'PASSED (FALSE)'}
+                        {rule.isMatched ? 'MATCHED (YES)' : 'NOT APPLICABLE (NO)'}
                       </span>
                     </div>
 
                     <div className="p-2 bg-[#030906] rounded text-[10px] text-emerald-400 font-mono mb-2">
-                      Condition: {rule.conditionText}
+                      Rule Check: {rule.conditionText}
                     </div>
 
                     <p className="text-xs text-gray-300 leading-relaxed font-medium">
