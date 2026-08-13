@@ -94,7 +94,7 @@ const SEED_BATCHES: WasteBatch[] = [
     location: 'Zone C - Windrow 1',
     status: 'Pending Recommendation',
     processStage: 'Not started',
-    treatmentMethod: undefined,
+    treatmentMethod: 'Composting',
     dateAdded: new Date(Date.now() - 2 * 86400000).toISOString(),
     notes: 'Dry branches chipped to 20mm with fall foliage.',
     hasContaminants: false
@@ -174,12 +174,15 @@ export function initStorage(): void {
   }
 }
 
+// Auto-initialize storage on module load
+initStorage();
+
 // BATCH CRUD
 export function getBatches(): WasteBatch[] {
   initStorage();
   try {
     const data = localStorage.getItem(STORAGE_KEYS.BATCHES);
-    return data ? JSON.parse(data) : [];
+    return data ? JSON.parse(data) : SEED_BATCHES;
   } catch (e) {
     return SEED_BATCHES;
   }
@@ -223,13 +226,13 @@ export function getReadings(batchId?: string): ProcessReading[] {
   initStorage();
   try {
     const data = localStorage.getItem(STORAGE_KEYS.READINGS);
-    const all: ProcessReading[] = data ? JSON.parse(data) : [];
+    const all: ProcessReading[] = data ? JSON.parse(data) : SEED_READINGS;
     if (batchId) {
       return all.filter(r => r.batchId === batchId).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
     }
     return all;
   } catch (e) {
-    return [];
+    return SEED_READINGS;
   }
 }
 
