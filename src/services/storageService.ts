@@ -1,6 +1,10 @@
 import type { WasteBatch, ProcessReading, RecommendationResult, ImpactMetrics, ProcessStage } from '../types/biocycle';
 import { calculateRecommendation } from './recommendationEngine';
 
+const API_BASE_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+  ? 'http://localhost:3001/api'
+  : '/api';
+
 const STORAGE_KEYS = {
   BATCHES: 'biocycle_batches_v3',
   READINGS: 'biocycle_readings_v3',
@@ -162,6 +166,7 @@ const SEED_READINGS: ProcessReading[] = [
 ];
 
 export function initStorage(): void {
+  if (typeof window === 'undefined') return;
   if (!localStorage.getItem(STORAGE_KEYS.BATCHES)) {
     localStorage.setItem(STORAGE_KEYS.BATCHES, JSON.stringify(SEED_BATCHES));
   }
@@ -176,6 +181,27 @@ export function initStorage(): void {
 
 // Auto-initialize storage on module load
 initStorage();
+
+// Sync with backend API in background
+async function syncBatchWithBackend(batch: WasteBatch) {
+  try {
+    await fetch(`${API_BASE_URL}/batches`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        waste_type: batch.category || batch.name,
+        quantity_kg: batch.weightKg,
+        moisture_percent: batch.moisturePercent,
+        initial_ph: batch.initialPh,
+        source: batch.wasteSource,
+        description: batch.notes || undefined,
+        status: batch.status
+      })
+    });
+  } catch (e) {
+    // Offline fallback - ignore network error
+  }
+}
 
 // BATCH CRUD
 export function getBatches(): WasteBatch[] {
@@ -197,6 +223,10 @@ export function saveBatch(batch: WasteBatch): WasteBatch[] {
     batches.unshift(batch);
   }
   localStorage.setItem(STORAGE_KEYS.BATCHES, JSON.stringify(batches));
+  
+  // Background API Sync
+  syncBatchWithBackend(batch);
+
   return batches;
 }
 
@@ -303,6 +333,7 @@ export function getImpactMetrics(): ImpactMetrics {
 }
 
 export function resetStorageToDefaults(): void {
+  if (typeof window === 'undefined') return;
   localStorage.removeItem(STORAGE_KEYS.BATCHES);
   localStorage.removeItem(STORAGE_KEYS.READINGS);
   localStorage.removeItem(STORAGE_KEYS.RECOMMENDATIONS);
