@@ -1,7 +1,6 @@
 export type Language = 'en' | 'hi' | 'te' | 'es';
 
 export interface TranslationDictionary {
-  // Navigation & General
   appName: string;
   appTagline: string;
   navDashboard: string;
@@ -11,17 +10,17 @@ export interface TranslationDictionary {
   navCalculator: string;
   navHistory: string;
   languageSelectLabel: string;
-  
-  // Simple Plain Language Terms
-  wetnessLabel: string; // Moisture
-  wetnessSimple: string; // How wet or dry is it?
-  sournessLabel: string; // pH
-  sournessSimple: string; // Is it sour or normal?
-  heatLabel: string; // Temperature
-  smellLabel: string; // Odor
-  weightLabel: string; // Quantity in kg
-  
-  // Dashboard Plain Words
+
+  // Measurement Plain Terms
+  wetnessLabel: string;
+  wetnessSimple: string;
+  sournessLabel: string;
+  sournessSimple: string;
+  heatLabel: string;
+  smellLabel: string;
+  weightLabel: string;
+
+  // Overview Plain Words
   dashboardTitle: string;
   dashboardSubtitle: string;
   totalWasteLabel: string;
@@ -53,7 +52,7 @@ export interface TranslationDictionary {
   submitBatchBtn: string;
   batchSuccessTitle: string;
 
-  // Recommendation Page & AI Assistant
+  // Recommendation Page
   recTitle: string;
   recSubtitle: string;
   aiAssistantTitle: string;
@@ -71,7 +70,7 @@ export interface TranslationDictionary {
   simpleRuleTitle: string;
   simpleRuleSubtitle: string;
 
-  // Process Monitor
+  // Telemetry Monitor Page
   monitorTitle: string;
   monitorSubtitle: string;
   selectBatchPrompt: string;
@@ -85,7 +84,7 @@ export interface TranslationDictionary {
   safetyNoticeTitle: string;
   safetyNoticeBody: string;
 
-  // Impact Calculator
+  // Impact Calculator Page
   impactTitle: string;
   impactSubtitle: string;
   assumptionsTitle: string;
@@ -93,7 +92,7 @@ export interface TranslationDictionary {
   disclaimerTitle: string;
   disclaimerBody: string;
 
-  // Methods Plain Translation
+  // Biological Methods Plain Descriptions
   compostingName: string;
   compostingSimple: string;
   vermicompostingName: string;
@@ -108,7 +107,7 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
   en: {
     appName: 'BioCycle',
     appTagline: 'Easy Organic Waste to Useful Fertilizer & Biogas',
-    navDashboard: 'Home Dashboard',
+    navDashboard: 'Home',
     navAddBatch: 'Add Waste Food/Dung',
     navRecommendation: 'Smart Recommendation',
     navMonitor: 'Daily Heat & Wetness Check',
@@ -124,7 +123,7 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     smellLabel: 'Smell / Odor',
     weightLabel: 'Weight (in Kilograms / kg)',
 
-    dashboardTitle: 'Organic Waste Helper Dashboard',
+    dashboardTitle: 'Organic Waste Helper Hub',
     dashboardSubtitle: 'See how much waste you have converted into natural fertilizer and cooking gas',
     totalWasteLabel: 'Total Waste Handled',
     totalWasteDesc: 'Total organic waste collected',
@@ -133,70 +132,70 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     outputYieldLabel: 'Fertilizer & Gas Output',
     outputYieldDesc: 'Useful compost and liquid fertilizer',
     wasteDivertedLabel: 'Saved From Trash Dump',
-    wasteDivertedDesc: 'Kept out of stinking landfills',
+    wasteDivertedDesc: 'Prevented from rotting in landfills',
     carbonBenefitLabel: 'Clean Air Benefit',
-    carbonBenefitDesc: 'Prevented dirty smoke and gases',
-    statusChartTitle: 'Current Stage of All Batches',
-    recentBatchesTitle: 'Your Recent Waste Entries',
-    noBatchesMessage: 'No waste recorded yet! Click below to start converting your food scraps or cow dung.',
-    addBatchBtn: 'Add Waste Entry Now',
+    carbonBenefitDesc: 'Avoided toxic greenhouse smoke',
+    statusChartTitle: 'Current Status of All Piles',
+    recentBatchesTitle: 'Your Recent Entries',
+    noBatchesMessage: 'No waste entries recorded yet! Click below to add your kitchen scraps or barn manure.',
+    addBatchBtn: 'Add New Waste Entry',
     getRecBtn: 'Find Best Method',
 
-    addBatchTitle: 'Log New Waste Entry',
-    addBatchSubtitle: 'Tell us what waste you have, and we will guide you on how to make natural fertilizer',
-    chooseWasteType: 'What kind of waste do you have? *',
+    addBatchTitle: 'Add New Waste Entry',
+    addBatchSubtitle: 'Tell us what waste you have, and we will guide you step-by-step',
+    chooseWasteType: 'What type of waste do you have? *',
     enterWeight: 'How heavy is it? (in Kilograms - kg) *',
     howWetQuestion: 'How wet is this waste? (%) *',
-    isSourQuestion: 'How sour is this waste? (pH scale: 3 = acidic lemon, 7 = normal water) *',
+    isSourQuestion: 'How sour is this waste? (pH scale: 3 = sour like lemon, 7 = neutral water) *',
     whereFromQuestion: 'Where did this waste come from? *',
     dateLabel: 'Collection Date *',
-    notesLabel: 'Any extra notes or observations',
-    submitBatchBtn: 'Save Entry & Show Recommendation',
-    batchSuccessTitle: 'Waste Saved Successfully!',
+    notesLabel: 'Any extra details or notes',
+    submitBatchBtn: 'Save Entry & View Guidance',
+    batchSuccessTitle: 'Waste Entry Saved Successfully!',
 
     recTitle: 'Best Method for Your Waste',
-    recSubtitle: 'Simple step-by-step guidance explained without complicated scientific terms',
-    aiAssistantTitle: 'Easy Voice/Text Waste Assistant',
-    aiAssistantSubtitle: 'Type in plain words like "wet banana peels and vegetable kitchen waste"',
-    aiInputPlaceholder: 'Type what you have in simple words... e.g. wet banana peels and leaves',
-    aiAnalyzeBtn: 'Check My Waste',
-    aiTrySamples: 'Click to test sample examples:',
+    recSubtitle: 'Clear step-by-step guidance without complex scientific jargon',
+    aiAssistantTitle: 'Simple Voice/Text Waste Assistant',
+    aiAssistantSubtitle: 'Describe your waste in simple words, e.g. "Wet banana peels with kitchen scraps"',
+    aiInputPlaceholder: 'Type in simple words... e.g. wet banana skins and vegetable leaves',
+    aiAnalyzeBtn: 'Check Waste',
+    aiTrySamples: 'Click to try quick examples:',
     aiCategoryLabel: '1. Waste Category',
-    aiMoistureLabel: '2. How Wet / Dry It Is',
-    aiProcessesLabel: '3. Best Ways to Treat It',
-    aiNeededInfoLabel: '4. Simple Steps Needed Next',
-    aiWarningsLabel: '5. Things to Watch Out For',
-    aiManualVerification: 'Needs manual verification. Please check the waste with your eyes.',
+    aiMoistureLabel: '2. Wetness / Moisture Level',
+    aiProcessesLabel: '3. Best Natural Method',
+    aiNeededInfoLabel: '4. Next Simple Actions',
+    aiWarningsLabel: '5. Safety Precautions',
+    aiManualVerification: 'Manual inspection needed. Please inspect waste pile in person.',
     aiTransferBtn: 'Use This In Recommendation Guide',
-    simpleRuleTitle: 'Why We Suggested This Method',
-    simpleRuleSubtitle: 'Clear rules explained in simple words',
+    simpleRuleTitle: 'Why Did We Recommend This Method?',
+    simpleRuleSubtitle: 'Explained in clear simple rules',
 
     monitorTitle: 'Daily Heap Warmth & Wetness Check',
-    monitorSubtitle: 'Check if your waste heap is heating up correctly and breaking down well',
-    selectBatchPrompt: 'Choose Waste Batch to Check:',
-    currentStageLabel: 'Current Stage:',
-    updateStageLabel: 'Change Stage:',
-    logReadingBtn: 'Add Today\'s Check',
-    latestReadingTitle: 'Latest Daily Check Result',
+    monitorSubtitle: 'Check if your compost heap is heating up and decomposing properly',
+    selectBatchPrompt: 'Select a pile to inspect:',
+    currentStageLabel: 'Current Process Stage:',
+    updateStageLabel: 'Update Stage:',
+    logReadingBtn: "Log Today's Check",
+    latestReadingTitle: 'Latest Inspection Results',
     tempChartTitle: 'Heat / Warmth Chart (°C)',
     phChartTitle: 'Sourness Chart (pH)',
-    moistureChartTitle: 'Wetness Chart (%)',
-    safetyNoticeTitle: 'Important Safety Notice',
-    safetyNoticeBody: 'When your heap is ready, test a small amount on garden plants first. Do not sell or use large amounts on crops without testing.',
+    moistureChartTitle: 'Wateriness / Wetness Chart (%)',
+    safetyNoticeTitle: 'Important Safety Reminder',
+    safetyNoticeBody: 'When your compost is mature, test on a small potted plant first. Always test compost before widespread farm use.',
 
-    impactTitle: 'Simple Savings & Output Estimator',
-    impactSubtitle: 'See how much natural manure and cooking gas your waste will produce',
+    impactTitle: 'Simple Fertilizer & Savings Calculator',
+    impactSubtitle: 'See how much natural fertilizer and cooking gas your waste will produce',
     assumptionsTitle: 'Simple Calculation Factors',
-    assumptionsSubtitle: 'Adjust slider numbers to see changes in your estimated yield',
+    assumptionsSubtitle: 'Adjust multipliers to see estimated output yields',
     disclaimerTitle: 'Notice About Estimates',
-    disclaimerBody: 'These numbers are friendly estimates to help you understand your savings. Actual results may vary depending on local weather and waste mix.',
+    disclaimerBody: 'These numbers are educational estimates. Actual yields vary depending on weather and waste composition.',
 
     compostingName: 'Natural Rotting in Air (Composting)',
-    compostingSimple: 'Mix wet green food scraps with dry brown leaves in an open pile. Turn once a week.',
+    compostingSimple: 'Mix wet food scraps with dry leaves in an open heap. Turn once a week for fresh air.',
     vermicompostingName: 'Earthworm Farming (Worm Compost)',
-    vermicompostingSimple: 'Feed waste to earthworms in a shaded box to make rich black worm manure.',
+    vermicompostingSimple: 'Feed organic scraps to earthworms in a shaded bin to produce rich dark castings.',
     anaerobicName: 'Biogas Tank (Cooking Gas & Liquid Manure)',
-    anaerobicSimple: 'Seal wet food scraps or dung in an airtight tank to produce free gas for cooking.',
+    anaerobicSimple: 'Place manure or wet food scraps in a sealed tank to capture free cooking gas.',
     biofertilizerName: 'Liquid Bio-Tonic Fermentation',
     biofertilizerSimple: 'Soak organic waste in water to make a liquid plant growth booster.'
   },
@@ -204,7 +203,7 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
   hi: {
     appName: 'बायो-साइकिल (BioCycle)',
     appTagline: 'कचरे से बनाएं मुफ्त जैविक खाद और बायोगैस',
-    navDashboard: 'मुख्य डैशबोर्ड',
+    navDashboard: 'मुख्य पृष्ठ',
     navAddBatch: 'कचरा/गोबर दर्ज करें',
     navRecommendation: 'सही तरीका जानें',
     navMonitor: 'रोजाना गर्मी और नमी जांच',
@@ -300,7 +299,7 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
   te: {
     appName: 'బయో-సైకిల్ (BioCycle)',
     appTagline: 'చెత్త నుండి ఉచితంగా ఎరువు మరియు బయోగాస్ తయారు చేసుకోండి',
-    navDashboard: 'ముఖ్య డాష్‌బోర్డ్',
+    navDashboard: 'ప్రధాన పేజీ',
     navAddBatch: 'చెత్త/పేడ నమోదు చేయండి',
     navRecommendation: 'మంచి పద్ధతి తెలుసుకోండి',
     navMonitor: 'రోజువారీ వేడి & తేమ పరిశీలన',
@@ -396,7 +395,7 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
   es: {
     appName: 'BioCycle',
     appTagline: 'Convierte residuos orgánicos en abono y biogás fácil',
-    navDashboard: 'Panel Principal',
+    navDashboard: 'Inicio',
     navAddBatch: 'Agregar Residuos',
     navRecommendation: 'Recomendación Inteligente',
     navMonitor: 'Control Diario de Humedad y Calor',
@@ -412,7 +411,7 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     smellLabel: 'Olor / Aroma',
     weightLabel: 'Peso (en Kilogramos / kg)',
 
-    dashboardTitle: 'Panel de Ayuda para Residuos Orgánicos',
+    dashboardTitle: 'Centro de Ayuda para Residuos Orgánicos',
     dashboardSubtitle: 'Vea cuánto residuo ha convertido en fertilizante natural y gas para cocinar',
     totalWasteLabel: 'Total de Residuos',
     totalWasteDesc: 'Total de residuos orgánicos recolectados',
@@ -428,64 +427,64 @@ export const TRANSLATIONS: Record<Language, TranslationDictionary> = {
     recentBatchesTitle: 'Sus Entradas Recientes',
     noBatchesMessage: '¡No hay residuos registrados aún! Haga clic abajo para comenzar.',
     addBatchBtn: 'Agregar Nuevo Registro',
-    getRecBtn: 'Buscar Mejor Método',
+    getRecBtn: 'Encontrar Mejor Método',
 
-    addBatchTitle: 'Registrar Nuevo Residuo',
-    addBatchSubtitle: 'Díganos qué residuos tiene y le guiaremos para hacer fertilizante natural',
+    addBatchTitle: 'Agregar Nuevo Registro de Residuos',
+    addBatchSubtitle: 'Díganos qué residuo tiene y lo guiaremos paso a paso',
     chooseWasteType: '¿Qué tipo de residuo tiene? *',
     enterWeight: '¿Cuánto pesa? (en Kilogramos - kg) *',
     howWetQuestion: '¿Qué tan húmedo está este residuo? (%) *',
-    isSourQuestion: '¿Qué tan ácido es? (pH: 3 = limón ácido, 7 = agua normal) *',
+    isSourQuestion: '¿Qué tan ácido está este residuo? (Escala pH: 3 = ácido como limón, 7 = agua neutra) *',
     whereFromQuestion: '¿De dónde proviene este residuo? *',
     dateLabel: 'Fecha de Recolección *',
-    notesLabel: 'Notas o observaciones adicionales',
-    submitBatchBtn: 'Guardar y Ver Recomendación',
-    batchSuccessTitle: '¡Residuo Guardado Exitosamente!',
+    notesLabel: 'Detalles adicionales o notas',
+    submitBatchBtn: 'Guardar Entrada y Ver Guía',
+    batchSuccessTitle: '¡Entrada de Residuos Guardada con Éxito!',
 
     recTitle: 'El Mejor Método para sus Residuos',
-    recSubtitle: 'Guía paso a paso explicada sin términos científicos complicados',
-    aiAssistantTitle: 'Asistente de Residuos Fácil',
-    aiAssistantSubtitle: 'Escriba con palabras sencillas como "cáscaras de plátano húmedas"',
-    aiInputPlaceholder: 'Escriba lo que tiene en palabras sencillas...',
-    aiAnalyzeBtn: 'Analizar Residuo',
-    aiTrySamples: 'Haga clic para probar ejemplos:',
-    aiCategoryLabel: '1. Categoría de Residuo',
+    recSubtitle: 'Guía clara paso a paso sin jerga científica compleja',
+    aiAssistantTitle: 'Asistente de Residuos por Voz/Texto',
+    aiAssistantSubtitle: 'Describa sus residuos en palabras simples, p. ej. "Cáscaras de plátano húmedas con restos de verdura"',
+    aiInputPlaceholder: 'Escriba en palabras simples... p. ej. cáscaras de plátano húmedas',
+    aiAnalyzeBtn: 'Analizar Residuos',
+    aiTrySamples: 'Haga clic para probar ejemplos rápidos:',
+    aiCategoryLabel: '1. Categoría de Residuos',
     aiMoistureLabel: '2. Nivel de Humedad',
-    aiProcessesLabel: '3. Mejores Formas de Tratarse',
-    aiNeededInfoLabel: '4. Pasos Siguientes Necesarios',
-    aiWarningsLabel: '5. Precauciones a Tener en Cuenta',
-    aiManualVerification: 'Requiere verificación manual. Por favor revise el residuo visualmente.',
-    aiTransferBtn: 'Usar Esto en la Guía de Recomendaciones',
-    simpleRuleTitle: '¿Por qué sugerimos este método?',
-    simpleRuleSubtitle: 'Reglas claras explicadas en palabras sencillas',
+    aiProcessesLabel: '3. Mejor Método Natural',
+    aiNeededInfoLabel: '4. Próximas Acciones Simples',
+    aiWarningsLabel: '5. Precauciones de Seguridad',
+    aiManualVerification: 'Se requiere inspección manual. Por favor inspeccione la pila en persona.',
+    aiTransferBtn: 'Usar esto en la Guía de Recomendaciones',
+    simpleRuleTitle: '¿Por qué recomendamos este método?',
+    simpleRuleSubtitle: 'Explicado con reglas claras y simples',
 
-    monitorTitle: 'Control Diario de Calor y Humedad',
-    monitorSubtitle: 'Verifique si su pila de residuos se calienta correctamente',
-    selectBatchPrompt: 'Elija la Pila a Verificar:',
-    currentStageLabel: 'Etapa Actual:',
-    updateStageLabel: 'Cambiar Etapa:',
-    logReadingBtn: 'Agregar Control de Hoy',
-    latestReadingTitle: 'Resultado del Último Control',
-    tempChartTitle: 'Gráfico de Calor (°C)',
+    monitorTitle: 'Control Diario de Calor y Humedad de la Pila',
+    monitorSubtitle: 'Compruebe si su pila de compost se está calentando y descomponiendo correctamente',
+    selectBatchPrompt: 'Seleccione una pila para inspeccionar:',
+    currentStageLabel: 'Etapa Actual del Proceso:',
+    updateStageLabel: 'Actualizar Etapa:',
+    logReadingBtn: 'Registrar Inspección de Hoy',
+    latestReadingTitle: 'Últimos Resultados de Inspección',
+    tempChartTitle: 'Gráfico de Calor / Temperatura (°C)',
     phChartTitle: 'Gráfico de Acidez (pH)',
     moistureChartTitle: 'Gráfico de Humedad (%)',
-    safetyNoticeTitle: 'Aviso Importante de Seguridad',
-    safetyNoticeBody: 'Cuando su abono esté listo, pruébelo primero en unas pocas plantas antes de usarlo en cultivos grandes.',
+    safetyNoticeTitle: 'Recordatorio Importante de Seguridad',
+    safetyNoticeBody: 'Cuando su compost esté maduro, pruébelo primero en una planta pequeña en maceta. Pruebe siempre el compost antes de usarlo en el campo.',
 
-    impactTitle: 'Estimador de Ahorro y Producción',
-    impactSubtitle: 'Conozca cuánto abono natural y gas producirán sus residuos',
+    impactTitle: 'Calculadora de Fertilizante y Ahorro',
+    impactSubtitle: 'Vea cuánto fertilizante natural y gas para cocinar producirán sus residuos',
     assumptionsTitle: 'Factores de Cálculo Simples',
-    assumptionsSubtitle: 'Ajuste los números para ver cambios en la producción estimada',
-    disclaimerTitle: 'Nota Sobre las Estimaciones',
-    disclaimerBody: 'Estos números son estimaciones educativas para ayudarle a entender sus ahorros.',
+    assumptionsSubtitle: 'Ajuste los multiplicadores para ver los rendimientos estimados',
+    disclaimerTitle: 'Aviso Sobre las Estimaciones',
+    disclaimerBody: 'Estos números son estimaciones educativas. Los rendimientos reales varían según el clima y la composición de los residuos.',
 
     compostingName: 'Descomposición Natural al Aire (Compostaje)',
-    compostingSimple: 'Mezcle restos de comida con hojas secas en una pila abierta. Voltee una vez por semana.',
+    compostingSimple: 'Mezcle restos de comida húmedos con hojas secas en una pila abierta. Voltee una vez por semana.',
     vermicompostingName: 'Lombricultura (Compost de Lombriz)',
-    vermicompostingSimple: 'Alimente a las lombrices en una caja a la sombra para hacer abono negro y rico.',
-    anaerobicName: 'Tanque de Biogás (Gas para Cocinar y Abono Líquido)',
-    anaerobicSimple: 'Selle restos de comida o estiércol en un tanque hermético para producir gas gratis.',
-    biofertilizerName: 'Bio-Tónico Líquido',
-    biofertilizerSimple: 'Remoje residuos orgánicos en agua para hacer un estimulante líquido para plantas.'
+    vermicompostingSimple: 'Alimente a las lombrices con restos orgánicos en un contenedor a la sombra para obtener abono oscuro.',
+    anaerobicName: 'Tanque de Biogás (Gas para Cocinar y Estiércol Líquido)',
+    anaerobicSimple: 'Coloque estiércol o restos de comida en un tanque sellado para obtener gas gratis para cocinar.',
+    biofertilizerName: 'Fermentación de Biofertilizante Líquido',
+    biofertilizerSimple: 'Remoje residuos orgánicos en agua para hacer un tónico estimulante para las plantas.'
   }
 };

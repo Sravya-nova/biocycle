@@ -3,7 +3,7 @@ import { useLanguage } from '../context/LanguageContext';
 import type { Language } from '../i18n/translations';
 import { 
   Recycle, 
-  LayoutDashboard, 
+  Home, 
   PlusCircle, 
   Sparkles, 
   Activity, 
@@ -34,7 +34,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems: { id: NavTab; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-    { id: 'dashboard', label: t.navDashboard, icon: LayoutDashboard },
+    { id: 'dashboard', label: t.navDashboard, icon: Home },
     { id: 'add-batch', label: t.navAddBatch, icon: PlusCircle },
     { id: 'recommendation', label: t.navRecommendation, icon: Sparkles },
     { id: 'process-monitor', label: t.navMonitor, icon: Activity },
