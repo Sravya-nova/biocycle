@@ -1,7 +1,80 @@
-import type { WasteBatch, RecommendationResult, TreatmentMethod, RecipeAdjustment, ExpectedYield, RuleEvaluation } from '../types/biocycle';
+import type { WasteBatch, RecommendationResult, TreatmentMethod, RecipeAdjustment, ExpectedYield, RuleEvaluation, WasteCategory } from '../types/biocycle';
+
+export function detectWasteCategoryFromText(textInput: string, sourceInput?: string): {
+  category: WasteCategory;
+  explanation: string;
+  confidence: number;
+} {
+  const combined = (textInput + ' ' + (sourceInput || '')).toLowerCase();
+
+  if (combined.match(/\b(manure|dung|slurry|cow|cattle|bovine|horse|poultry|chicken|gobar|farm|livestock|barn)\b/i)) {
+    return {
+      category: 'Animal Manure',
+      explanation: "Detected Animal Manure / Farm Barn Waste based on terms matching livestock manure.",
+      confidence: 95
+    };
+  }
+
+  if (combined.match(/\b(coffee|espresso|tea|grounds|spent|cafe)\b/i)) {
+    return {
+      category: 'Coffee Grounds',
+      explanation: "Detected Coffee / Tea Grounds based on cafe and beverage organic residues.",
+      confidence: 95
+    };
+  }
+
+  if (combined.match(/\b(banana|peel|peels|vegetable|vegetables|fruit|fruits|kitchen|cabbage|spinach|apple|food|dining|canteen|restaurant|curry|rice|food scraps)\b/i)) {
+    return {
+      category: 'Food Scraps',
+      explanation: "Detected Food Scraps (Fruit & Vegetable Scraps) from kitchen prep or dining waste.",
+      confidence: 92
+    };
+  }
+
+  if (combined.match(/\b(leaf|leaves|grass|yard|pruning|prunings|garden|foliage|pine|weed|lawn)\b/i)) {
+    return {
+      category: 'Yard Trimmings & Leaves',
+      explanation: "Detected Yard Trimmings & Fallen Leaves from garden or municipal maintenance.",
+      confidence: 90
+    };
+  }
+
+  if (combined.match(/\b(crop|straw|husk|chaff|bagasse|stalk|paddy|wheat|corn|sugarcane|harvest|vines)\b/i)) {
+    return {
+      category: 'Agricultural Residue',
+      explanation: "Detected Agricultural Crop Residue from farm harvest and crop processing.",
+      confidence: 90
+    };
+  }
+
+  if (combined.match(/\b(sawdust|wood|timber|shaving|shavings|bark|lumber|carpentry)\b/i)) {
+    return {
+      category: 'Sawdust & Wood Chips',
+      explanation: "Detected Wood Sawdust & Timber Chips from wood cutting or carpentry.",
+      confidence: 92
+    };
+  }
+
+  if (combined.match(/\b(cardboard|paper|carton|shred|shredded|packaging|box|newspaper)\b/i)) {
+    return {
+      category: 'Cardboard & Paper Shreds',
+      explanation: "Detected Cardboard & Paper Shreds from unprinted packaging scraps.",
+      confidence: 90
+    };
+  }
+
+  return {
+    category: 'Food Scraps',
+    explanation: "General organic waste stream detected. Defaulting to Food Scraps.",
+    confidence: 75
+  };
+}
 
 export function calculateRecommendation(batch: WasteBatch): RecommendationResult {
-  const { weightKg, moisturePercent, cnRatio, category, initialPh, wasteSource, hasContaminants } = batch;
+  const { weightKg, moisturePercent, cnRatio, category, initialPh, wasteSource, hasContaminants, name, notes } = batch;
+
+  // Smart Category Auto-Detection from human inserted text
+  const detectedCategory = detectWasteCategoryFromText(name + ' ' + (notes || ''), category || wasteSource);
 
   const warnings: string[] = [];
   const suggestedActions: string[] = [];
@@ -16,15 +89,16 @@ export function calculateRecommendation(batch: WasteBatch): RecommendationResult
   };
 
   // Rule 1: Fruit or vegetable waste with moisture above 60%
-  const isFruitVeg = category === 'Food Scraps' || category === 'Agricultural Residue';
+  const effectiveCategory: WasteCategory = detectedCategory.category || category || 'Food Scraps';
+  const isFruitVeg = effectiveCategory === 'Food Scraps' || effectiveCategory === 'Agricultural Residue';
   const rule1Matched = isFruitVeg && moisturePercent > 60;
   ruleEvaluations.push({
     ruleId: 'RULE_1',
     ruleTitle: 'Fruit/Vegetable Waste High Moisture (>60%)',
-    conditionText: `Category is Fruit/Veg/Food Scraps (${category}) AND Moisture (${moisturePercent}%) > 60%`,
+    conditionText: `Category detected as ${effectiveCategory} AND Moisture (${moisturePercent}%) > 60%`,
     isMatched: rule1Matched,
     explanation: rule1Matched 
-      ? 'MATCHED: Wet fruit/veg waste contains readily digestible sugars and water. Recommending Aerobic Composting or Anaerobic Digestion.'
+      ? `MATCHED: ${detectedCategory.explanation} Wet fruit/veg scraps provide fast methanogenic & aerobic substrate.`
       : 'NOT MATCHED: Material is not wet fruit/veg scraps or moisture is ≤ 60%.',
     category: 'recommendation'
   });
@@ -35,12 +109,12 @@ export function calculateRecommendation(batch: WasteBatch): RecommendationResult
   }
 
   // Rule 2: Dry leaves or crop residue with moisture below 40%
-  const isDryWoody = category === 'Yard Trimmings & Leaves' || category === 'Agricultural Residue' || category === 'Sawdust & Wood Chips' || category === 'Cardboard & Paper Shreds';
+  const isDryWoody = effectiveCategory === 'Yard Trimmings & Leaves' || effectiveCategory === 'Agricultural Residue' || effectiveCategory === 'Sawdust & Wood Chips' || effectiveCategory === 'Cardboard & Paper Shreds';
   const rule2Matched = isDryWoody && moisturePercent < 40;
   ruleEvaluations.push({
     ruleId: 'RULE_2',
     ruleTitle: 'Dry Leaves & Crop Residue Low Moisture (<40%)',
-    conditionText: `Category is Dry Leaves/Residue/Wood (${category}) AND Moisture (${moisturePercent}%) < 40%`,
+    conditionText: `Category detected as ${effectiveCategory} AND Moisture (${moisturePercent}%) < 40%`,
     isMatched: rule2Matched,
     explanation: rule2Matched
       ? 'MATCHED: High carbon dry residue. Recommending Composting after mandatory moisture adjustment.'
@@ -53,12 +127,12 @@ export function calculateRecommendation(batch: WasteBatch): RecommendationResult
   }
 
   // Rule 3: Animal manure mixed with wet organic waste
-  const isManure = category === 'Animal Manure';
+  const isManure = effectiveCategory === 'Animal Manure';
   const rule3Matched = isManure || (wasteSource === 'Farm & Livestock' && moisturePercent > 60);
   ruleEvaluations.push({
     ruleId: 'RULE_3',
     ruleTitle: 'Animal Manure Mixed with Wet Waste',
-    conditionText: `Category is Manure (${category}) OR Source is Farm & Livestock with Moisture (${moisturePercent}%) > 60%`,
+    conditionText: `Category detected as Manure (${effectiveCategory}) OR Source is Farm with Moisture (${moisturePercent}%) > 60%`,
     isMatched: rule3Matched,
     explanation: rule3Matched
       ? 'MATCHED: Wet manure contains high methanogenic microbial activity and nitrogen. Recommending Anaerobic Digestion for optimal methane energy recovery.'
@@ -139,16 +213,16 @@ export function calculateRecommendation(batch: WasteBatch): RecommendationResult
 
   const topMethod = sorted[0].method;
 
-  // Primary Reason Synthesis
-  let primaryReason = `Selected ${topMethod} based on biological rule matching for ${category} from ${wasteSource}.`;
+  // Primary Reason Synthesis with Detected Waste Type
+  let primaryReason = `Automatically detected waste category as "${effectiveCategory}" (${detectedCategory.explanation}). Selected ${topMethod} based on biological parameters.`;
   if (rule3Matched && topMethod === 'Anaerobic Digestion') {
-    primaryReason = `Anaerobic Digestion recommended due to wet manure waste profile (${moisturePercent}% moisture). Maximizes methane biogas yield and pathogen breakdown.`;
+    primaryReason = `Detected waste as "${effectiveCategory}". Anaerobic Digestion recommended due to wet manure waste profile (${moisturePercent}% moisture). Maximizes methane biogas yield.`;
   } else if (rule1Matched && topMethod === 'Anaerobic Digestion') {
-    primaryReason = `Anaerobic Digestion recommended due to high moisture fruit/vegetable scraps (${moisturePercent}% moisture) providing fast methanogenic substrate.`;
+    primaryReason = `Detected waste as "${effectiveCategory}". Anaerobic Digestion recommended due to high moisture fruit/vegetable scraps (${moisturePercent}% moisture).`;
   } else if (rule1Matched && topMethod === 'Composting') {
-    primaryReason = `Aerobic Composting recommended for wet organic fruit/veg scraps (${moisturePercent}% moisture) to rapidly generate high-humus compost.`;
+    primaryReason = `Detected waste as "${effectiveCategory}". Aerobic Composting recommended for wet organic fruit/veg scraps (${moisturePercent}% moisture) to rapidly generate compost.`;
   } else if (rule2Matched) {
-    primaryReason = `Aerobic Composting recommended for dry carbonaceous residue (${moisturePercent}% moisture). Moisture adjustment required prior to heap building.`;
+    primaryReason = `Detected waste as "${effectiveCategory}". Aerobic Composting recommended for dry carbonaceous residue (${moisturePercent}% moisture). Moisture adjustment required.`;
   }
 
   // Recipe adjustments
@@ -216,6 +290,7 @@ export function calculateRecommendation(batch: WasteBatch): RecommendationResult
   };
 
   const keyInstructions = [
+    `Detected Waste Category: ${effectiveCategory} (${detectedCategory.confidence}% Confidence)`,
     `Verify initial pH (${initialPh}) and moisture (${moisturePercent}%). Apply rule adjustments if warnings are active.`,
     `Prepare substrate according to ${topMethod} recipe protocol.`,
     `Monitor temperature and moisture daily via the Process Telemetry Monitor.`,
@@ -226,13 +301,13 @@ export function calculateRecommendation(batch: WasteBatch): RecommendationResult
     id: 'rec_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
     batchId: batch.id,
     batchName: batch.name,
-    wasteType: batch.category,
+    wasteType: effectiveCategory,
     weightKg: batch.weightKg,
     moisturePercent: batch.moisturePercent,
     initialPh: batch.initialPh,
     wasteSource: batch.wasteSource,
     recommendedMethod: topMethod,
-    confidenceScore: 92,
+    confidenceScore: detectedCategory.confidence,
     primaryReason,
     warnings,
     suggestedActions,
